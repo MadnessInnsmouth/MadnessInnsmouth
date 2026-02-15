@@ -34,7 +34,7 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 
 1. **Download** the latest release from the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases)
 2. **Extract** the ZIP file
-3. **Run** `Install-FM26Accessibility.ps1` (right-click → Run with PowerShell)
+3. **Run** `Install-FM26Accessibility.bat` (double-click to launch the installer)
 4. **Follow** the on-screen instructions
 5. **Launch** Football Manager 2026
 

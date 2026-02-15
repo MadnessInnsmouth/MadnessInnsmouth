@@ -23,13 +23,10 @@ Before you start, make sure you have:
 
 ### Step 2: Run the Installer
 
-1. **Right-click** on `Install-FM26Accessibility.ps1`
-2. Select **"Run with PowerShell"**
-3. If you see a security warning:
-   - Press **`R`** for "Run once"
-   - Or type `Y` and press Enter
-4. Follow the on-screen instructions
-5. The installer will:
+1. **Double-click** `Install-FM26Accessibility.bat` to launch the installer
+2. If you see a security warning, click **"Run anyway"** or press **Y**
+3. Follow the on-screen instructions
+4. The installer will:
    - Find your FM26 installation automatically
    - Download BepInEx (the modding framework)
    - Install the accessibility plugin
@@ -83,7 +80,7 @@ Before you start, make sure you have:
 
 ### "PowerShell script won't run"
 
-If Windows blocks the script:
+If you have issues with the `.bat` launcher:
 
 1. Open PowerShell as Administrator
 2. Run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
