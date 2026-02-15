@@ -78,14 +78,13 @@ Before you start, make sure you have:
    - Steam: `C:\Program Files (x86)\Steam\steamapps\common\Football Manager 2026`
    - Xbox: `C:\XboxGames\Football Manager 2026`
 
-### "PowerShell script won't run"
+### "Installer won't run"
 
-If you have issues with the `.bat` launcher:
+The `.bat` launcher handles PowerShell execution policy automatically. If you still have issues:
 
-1. Open PowerShell as Administrator
-2. Run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-3. Press `Y` to confirm
-4. Try running the installer again
+1. Make sure both `Install-FM26Accessibility.bat` and `Install-FM26Accessibility.ps1` are in the same folder
+2. Right-click the `.bat` file and select **"Run as administrator"**
+3. If Windows SmartScreen blocks it, click **"More info"** → **"Run anyway"**
 
 ### "Mod doesn't load after installation"
 
