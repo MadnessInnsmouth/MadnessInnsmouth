@@ -23,13 +23,10 @@ Before you start, make sure you have:
 
 ### Step 2: Run the Installer
 
-1. **Right-click** on `Install-FM26Accessibility.ps1`
-2. Select **"Run with PowerShell"**
-3. If you see a security warning:
-   - Press **`R`** for "Run once"
-   - Or type `Y` and press Enter
-4. Follow the on-screen instructions
-5. The installer will:
+1. **Double-click** `Install-FM26Accessibility.bat` to launch the installer
+2. If you see a security warning, click **"Run anyway"** or press **Y**
+3. Follow the on-screen instructions
+4. The installer will:
    - Find your FM26 installation automatically
    - Download BepInEx (the modding framework)
    - Install the accessibility plugin
@@ -81,14 +78,13 @@ Before you start, make sure you have:
    - Steam: `C:\Program Files (x86)\Steam\steamapps\common\Football Manager 2026`
    - Xbox: `C:\XboxGames\Football Manager 2026`
 
-### "PowerShell script won't run"
+### "Installer won't run"
 
-If Windows blocks the script:
+The `.bat` launcher handles PowerShell execution policy automatically. If you still have issues:
 
-1. Open PowerShell as Administrator
-2. Run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-3. Press `Y` to confirm
-4. Try running the installer again
+1. Make sure both `Install-FM26Accessibility.bat` and `Install-FM26Accessibility.ps1` are in the same folder
+2. Right-click the `.bat` file and select **"Run as administrator"**
+3. If Windows SmartScreen blocks it, click **"More info"** → **"Run anyway"**
 
 ### "Mod doesn't load after installation"
 
