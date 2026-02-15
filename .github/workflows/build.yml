@@ -25,7 +25,7 @@ jobs:
     - name: Download BepInEx
       run: |
         $bepInExVersion = "5.4.23.2"
-        $bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.0.zip"
+        $bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.zip"
         
         Write-Host "Downloading BepInEx..."
         $tempDir = Join-Path $env:TEMP "BepInEx_Download"
