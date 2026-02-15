@@ -1,0 +1,40 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.so
+*.dylib
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package manager
+packages/
+*.nupkg
+
+# Installer temp files
+temp/
+downloads/
+
+# NuGet
+*.nuget.props
+*.nuget.targets
+*.nuget.cache
+project.assets.json
+project.nuget.cache
+*.dgspec.json
