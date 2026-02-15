@@ -7,6 +7,7 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 ## ✨ Features
 
 - 🔊 **Full Screen Reader Support** - Works with NVDA, JAWS, Narrator, and other Windows screen readers
+- 🎯 **Direct NVDA Integration** - Enhanced NVDA support via Controller Client for faster, more reliable announcements
 - 🎮 **Main Menu Accessibility** - Navigate all menus entirely with keyboard and screen reader
 - ⌨️ **Keyboard Navigation** - Tab through UI elements, use arrow keys for lists
 - 🎯 **Automatic Element Detection** - Buttons, toggles, input fields, and text are automatically announced
@@ -14,6 +15,7 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 - 🔄 **Auto-Download Dependencies** - Installer downloads BepInEx and all requirements
 - 🛡️ **Non-Invasive** - Uses BepInEx plugin framework, doesn't modify game files directly
 - 🔧 **Configurable** - Adjust update frequency and other settings
+- 🔄 **Robust Error Handling** - Graceful fallbacks ensure mod keeps working
 - 📝 **Open Source** - MIT licensed, community contributions welcome
 
 ## 📋 Requirements
@@ -45,6 +47,8 @@ See [BUILD.md](BUILD.md) for manual installation and building from source.
 ## 📖 Documentation
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step installation and first-time usage
+- **[NVDA_SETUP.md](NVDA_SETUP.md)** - Complete NVDA setup and configuration guide
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide
 - **[BUILD.md](BUILD.md)** - Building from source and development setup
 - **[TECHNICAL.md](TECHNICAL.md)** - Technical architecture and API documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to the project
@@ -103,7 +107,7 @@ Available settings:
 - Manually specify FM26 path if auto-detection fails
 - Re-run installer with `-Force` flag to reinstall
 
-For more help, see [QUICKSTART.md](QUICKSTART.md) or [open an issue](https://github.com/MadnessInnsmouth/MadnessInnsmouth/issues).
+For more help, see the comprehensive **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** guide, [NVDA_SETUP.md](NVDA_SETUP.md) for NVDA-specific issues, or [open an issue](https://github.com/MadnessInnsmouth/MadnessInnsmouth/issues).
 
 ## 🤝 Contributing
 

@@ -9,7 +9,7 @@ Before you start, make sure you have:
 1. ✅ **Football Manager 2026** installed (Steam or Xbox Game Pass version)
 2. ✅ **Windows 10/11** (64-bit)
 3. ✅ **Screen Reader** installed and working:
-   - **NVDA** (Recommended - Free): https://www.nvaccess.org/download/
+   - **NVDA** (Recommended - Free): https://www.nvaccess.org/download/ - See [NVDA_SETUP.md](NVDA_SETUP.md) for complete setup guide
    - **JAWS**: https://www.freedomscientific.com/products/software/jaws/
    - **Windows Narrator**: Built into Windows (Press Windows+Ctrl+Enter)
 
@@ -111,6 +111,11 @@ The mod creates detailed logs here:
 Look for:
 - `FM26 Accessibility Plugin initialized successfully!` ✅ Good!
 - Any error messages ❌ Something went wrong
+
+### Comprehensive Guides
+
+- **[NVDA_SETUP.md](NVDA_SETUP.md)** - Complete NVDA setup, configuration, and optimization
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Detailed troubleshooting for all common issues
 
 ### Report Issues
 
