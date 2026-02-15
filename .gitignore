@@ -31,10 +31,10 @@ packages/
 temp/
 downloads/
 
-# Exclude everything except source and documentation
-!src/**
-!docs/**
-!install/**
-!README.md
-!LICENSE
-!.github/**
+# NuGet
+*.nuget.props
+*.nuget.targets
+*.nuget.cache
+project.assets.json
+project.nuget.cache
+*.dgspec.json
