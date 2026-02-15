@@ -21,7 +21,7 @@ $srcDir = Join-Path $rootDir "src\FM26AccessibilityPlugin"
 
 # BepInEx configuration
 $bepInExVersion = "5.4.23.2"
-$bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.0.zip"
+$bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.zip"
 
 # Function to download and extract BepInEx
 function Get-BepInExLibraries {
