@@ -1,0 +1,91 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj
+      
+    - name: Build plugin
+      run: dotnet build src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj --configuration Release --no-restore
+      
+    - name: Create build directory
+      run: |
+        New-Item -ItemType Directory -Path build -Force
+        Copy-Item -Path "src/FM26AccessibilityPlugin/bin/Release/net48/FM26AccessibilityPlugin.dll" -Destination "build/" -Force
+      shell: pwsh
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: FM26AccessibilityPlugin
+        path: |
+          build/FM26AccessibilityPlugin.dll
+          install/Install-FM26Accessibility.ps1
+          README.md
+          LICENSE
+        
+  release:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: FM26AccessibilityPlugin
+        path: release
+        
+    - name: Create release package
+      run: |
+        $version = "${{ github.ref_name }}"
+        $packageName = "FM26-Accessibility-Mod-$version.zip"
+        Compress-Archive -Path "release/*" -DestinationPath $packageName
+      shell: pwsh
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: FM26-Accessibility-Mod-*.zip
+        body: |
+          ## FM26 Accessibility Mod Release
+          
+          ### Installation
+          1. Download the zip file below
+          2. Extract it to a folder
+          3. Run `Install-FM26Accessibility.ps1` as Administrator
+          4. Follow the on-screen instructions
+          
+          ### What's New
+          See commit history for changes in this release.
+          
+          ### Requirements
+          - Football Manager 2026
+          - Windows 10/11 (64-bit)
+          - .NET Framework 4.8 or higher
+          - Screen reader (NVDA recommended)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
