@@ -4,7 +4,8 @@
 param(
     [string]$FM26Path = "",
     [switch]$Uninstall = $false,
-    [switch]$Force = $false
+    [switch]$Force = $false,
+    [string]$BepInExVersion = "5.4.23.2"
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,8 +13,8 @@ $ErrorActionPreference = "Stop"
 # Script configuration
 $ModName = "FM26 Accessibility Mod"
 $ModVersion = "1.0.0"
-$BepInExVersion = "5.4.23.2"
 $BepInExDownloadUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$BepInExVersion/BepInEx_win_x64_$BepInExVersion.0.zip"
+$NVDAControllerClientUrl = "https://www.nvaccess.org/files/nvda/releases/stable/nvdaControllerClient_2024.1.zip"
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  $ModName Installer v$ModVersion" -ForegroundColor Cyan
@@ -59,24 +60,48 @@ function Find-FM26Installation {
     return $null
 }
 
-# Function to download file with progress
+# Function to download file with progress and retry
 function Download-File {
     param(
         [string]$Url,
-        [string]$OutputPath
+        [string]$OutputPath,
+        [int]$MaxRetries = 3
     )
     
     Write-Host "Downloading from: $Url" -ForegroundColor Yellow
     
-    try {
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFile($Url, $OutputPath)
-        Write-Host "Download complete!" -ForegroundColor Green
-        return $true
-    } catch {
-        Write-Host "Download failed: $_" -ForegroundColor Red
-        return $false
+    for ($i = 1; $i -le $MaxRetries; $i++) {
+        try {
+            if ($i -gt 1) {
+                Write-Host "Retry attempt $i of $MaxRetries..." -ForegroundColor Yellow
+            }
+            
+            # Use WebClient for better progress handling
+            $webClient = New-Object System.Net.WebClient
+            $webClient.Headers.Add("User-Agent", "FM26-Accessibility-Mod-Installer/1.0")
+            
+            # Download with progress
+            $webClient.DownloadFile($Url, $OutputPath)
+            
+            Write-Host "Download complete!" -ForegroundColor Green
+            
+            # Verify file was downloaded and has size > 0
+            if ((Test-Path $OutputPath) -and ((Get-Item $OutputPath).Length -gt 0)) {
+                return $true
+            } else {
+                Write-Host "Downloaded file is empty or missing." -ForegroundColor Red
+                if ($i -lt $MaxRetries) { Start-Sleep -Seconds 2 }
+            }
+        } catch {
+            Write-Host "Download failed: $_" -ForegroundColor Red
+            if ($i -lt $MaxRetries) {
+                Start-Sleep -Seconds 2
+            }
+        }
     }
+    
+    Write-Host "Failed to download after $MaxRetries attempts." -ForegroundColor Red
+    return $false
 }
 
 # Function to extract zip file
@@ -89,12 +114,29 @@ function Extract-ZipFile {
     Write-Host "Extracting to: $DestPath" -ForegroundColor Yellow
     
     try {
+        # Validate zip file exists and is not empty
+        if (-not (Test-Path $ZipPath)) {
+            Write-Host "Zip file not found: $ZipPath" -ForegroundColor Red
+            return $false
+        }
+        
+        $zipSize = (Get-Item $ZipPath).Length
+        if ($zipSize -eq 0) {
+            Write-Host "Zip file is empty: $ZipPath" -ForegroundColor Red
+            return $false
+        }
+        
+        Write-Host "Zip file size: $([math]::Round($zipSize / 1MB, 2)) MB" -ForegroundColor Gray
+        
+        # Use .NET for extraction
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestPath)
+        
         Write-Host "Extraction complete!" -ForegroundColor Green
         return $true
     } catch {
         Write-Host "Extraction failed: $_" -ForegroundColor Red
+        Write-Host "This may happen if the zip file is corrupted or destination has permission issues." -ForegroundColor Yellow
         return $false
     }
 }
@@ -107,7 +149,14 @@ function Install-BepInEx {
     
     if ((Test-Path $bepInExPath) -and -not $Force) {
         Write-Host "BepInEx is already installed." -ForegroundColor Green
-        return $true
+        
+        # Verify core files exist
+        $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.dll"
+        if (-not (Test-Path $coreFile)) {
+            Write-Host "BepInEx installation appears incomplete. Reinstalling..." -ForegroundColor Yellow
+        } else {
+            return $true
+        }
     }
     
     Write-Host ""
@@ -124,12 +173,21 @@ function Install-BepInEx {
     $zipPath = Join-Path $tempDir "BepInEx.zip"
     Write-Host "Downloading BepInEx..."
     if (-not (Download-File -Url $BepInExDownloadUrl -OutputPath $zipPath)) {
+        Write-Host "Failed to download BepInEx. Check your internet connection." -ForegroundColor Red
         return $false
     }
     
     # Extract BepInEx
     Write-Host "Installing BepInEx to game directory..."
     if (-not (Extract-ZipFile -ZipPath $zipPath -DestPath $GamePath)) {
+        Write-Host "Failed to extract BepInEx. You may need to run as Administrator." -ForegroundColor Red
+        return $false
+    }
+    
+    # Verify installation
+    $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.dll"
+    if (-not (Test-Path $coreFile)) {
+        Write-Host "BepInEx installation verification failed. Core files missing." -ForegroundColor Red
         return $false
     }
     
@@ -138,6 +196,45 @@ function Install-BepInEx {
     
     Write-Host "BepInEx installed successfully!" -ForegroundColor Green
     return $true
+}
+
+# Function to install NVDA Controller Client
+function Install-NVDAControllerClient {
+    param([string]$GamePath)
+    
+    Write-Host ""
+    Write-Host "Installing NVDA Controller Client..." -ForegroundColor Cyan
+    
+    $pluginsPath = Join-Path $GamePath "BepInEx\plugins"
+    $nvdaDllPath = Join-Path $pluginsPath "nvdaControllerClient64.dll"
+    
+    # Check if already installed
+    if ((Test-Path $nvdaDllPath) -and -not $Force) {
+        Write-Host "NVDA Controller Client already installed." -ForegroundColor Green
+        return $true
+    }
+    
+    # Get the directory where this script is located
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $libDir = Join-Path (Split-Path -Parent $scriptDir) "lib"
+    $sourceNvdaDll = Join-Path $libDir "nvdaControllerClient64.dll"
+    
+    # Check if DLL exists in lib folder
+    if (Test-Path $sourceNvdaDll) {
+        Write-Host "Copying NVDA Controller Client from lib folder..."
+        Copy-Item -Path $sourceNvdaDll -Destination $nvdaDllPath -Force
+        Write-Host "NVDA Controller Client installed from local files!" -ForegroundColor Green
+        return $true
+    }
+    
+    # If not in lib folder, try to download
+    Write-Host "NVDA Controller Client not found in lib folder." -ForegroundColor Yellow
+    Write-Host "You can download it manually from: https://www.nvaccess.org/" -ForegroundColor Yellow
+    Write-Host "Place nvdaControllerClient64.dll in: $pluginsPath" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "The mod will still work without it, but NVDA integration will be limited." -ForegroundColor Yellow
+    
+    return $true  # Don't fail installation if NVDA client is missing
 }
 
 # Function to install the accessibility plugin
@@ -150,6 +247,7 @@ function Install-AccessibilityPlugin {
     $pluginsPath = Join-Path $GamePath "BepInEx\plugins"
     
     if (-not (Test-Path $pluginsPath)) {
+        Write-Host "Creating plugins directory..."
         New-Item -ItemType Directory -Path $pluginsPath -Force | Out-Null
     }
     
@@ -160,19 +258,41 @@ function Install-AccessibilityPlugin {
     # Check if plugin DLL exists
     if (-not (Test-Path $sourcePluginPath)) {
         Write-Host "Plugin DLL not found at: $sourcePluginPath" -ForegroundColor Yellow
-        Write-Host "Attempting to download pre-built version..." -ForegroundColor Yellow
-        
-        # For now, create a placeholder message
-        Write-Host "Please build the plugin using: dotnet build" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Please build the plugin first using one of these methods:" -ForegroundColor Yellow
+        Write-Host "  1. Run: dotnet build (from the repository root)" -ForegroundColor White
+        Write-Host "  2. Run: .\build\build.ps1" -ForegroundColor White
+        Write-Host "  3. Download a pre-built release from GitHub" -ForegroundColor White
+        Write-Host ""
         return $false
     }
     
+    # Verify the DLL is valid
+    $pluginSize = (Get-Item $sourcePluginPath).Length
+    if ($pluginSize -eq 0) {
+        Write-Host "Plugin DLL is empty or corrupted." -ForegroundColor Red
+        return $false
+    }
+    
+    Write-Host "Plugin size: $([math]::Round($pluginSize / 1KB, 2)) KB" -ForegroundColor Gray
+    
     # Copy plugin
     $destPluginPath = Join-Path $pluginsPath "FM26AccessibilityPlugin.dll"
-    Copy-Item -Path $sourcePluginPath -Destination $destPluginPath -Force
-    
-    Write-Host "Accessibility plugin installed!" -ForegroundColor Green
-    return $true
+    try {
+        Copy-Item -Path $sourcePluginPath -Destination $destPluginPath -Force
+        
+        # Verify copy
+        if (-not (Test-Path $destPluginPath)) {
+            Write-Host "Failed to copy plugin DLL to destination." -ForegroundColor Red
+            return $false
+        }
+        
+        Write-Host "Accessibility plugin installed!" -ForegroundColor Green
+        return $true
+    } catch {
+        Write-Host "Failed to copy plugin: $_" -ForegroundColor Red
+        return $false
+    }
 }
 
 # Function to create configuration
@@ -291,6 +411,9 @@ function Main {
         exit 1
     }
     
+    # Install NVDA Controller Client
+    Install-NVDAControllerClient -GamePath $fm26Path
+    
     # Install plugin
     if (-not (Install-AccessibilityPlugin -GamePath $fm26Path)) {
         Write-Host ""
@@ -310,10 +433,24 @@ function Main {
     Write-Host ""
     Write-Host "The FM26 Accessibility Mod has been installed successfully!" -ForegroundColor Green
     Write-Host ""
+    Write-Host "Installed Components:" -ForegroundColor Cyan
+    Write-Host "  ✓ BepInEx $BepInExVersion" -ForegroundColor White
+    Write-Host "  ✓ FM26 Accessibility Plugin" -ForegroundColor White
+    
+    # Check if NVDA Controller Client was installed
+    $nvdaDll = Join-Path $fm26Path "BepInEx\plugins\nvdaControllerClient64.dll"
+    if (Test-Path $nvdaDll) {
+        Write-Host "  ✓ NVDA Controller Client (for enhanced NVDA support)" -ForegroundColor White
+    } else {
+        Write-Host "  ℹ NVDA Controller Client not installed (optional)" -ForegroundColor Gray
+    }
+    
+    Write-Host ""
     Write-Host "Next Steps:" -ForegroundColor Cyan
     Write-Host "1. Launch Football Manager 2026" -ForegroundColor White
     Write-Host "2. Ensure your screen reader (NVDA, JAWS, or Narrator) is running" -ForegroundColor White
     Write-Host "3. Navigate menus using Tab and Arrow keys" -ForegroundColor White
+    Write-Host "4. Check BepInEx\LogOutput.log if you encounter issues" -ForegroundColor White
     Write-Host ""
     Write-Host "For support and updates, visit:" -ForegroundColor Cyan
     Write-Host "https://github.com/MadnessInnsmouth/MadnessInnsmouth" -ForegroundColor White

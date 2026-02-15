@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -139,12 +140,68 @@ namespace FM26AccessibilityPlugin
     }
 
     /// <summary>
+    /// NVDA Controller Client API wrapper for direct NVDA communication
+    /// </summary>
+    public static class NVDAController
+    {
+        private const string NVDA_DLL = "nvdaControllerClient64.dll";
+        
+        [DllImport(NVDA_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int nvdaController_testIfRunning();
+        
+        [DllImport(NVDA_DLL, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+        private static extern int nvdaController_speakText([MarshalAs(UnmanagedType.LPWStr)] string text);
+        
+        [DllImport(NVDA_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int nvdaController_cancelSpeech();
+        
+        public static bool IsRunning()
+        {
+            try
+            {
+                return nvdaController_testIfRunning() == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        public static bool Speak(string text)
+        {
+            try
+            {
+                return nvdaController_speakText(text) == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        public static bool CancelSpeech()
+        {
+            try
+            {
+                return nvdaController_cancelSpeech() == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
     /// Handles communication with Windows screen readers (NVDA, JAWS, Narrator)
     /// </summary>
     public class ScreenReaderInterface : MonoBehaviour
     {
         private ManualLogSource logger;
         private bool isScreenReaderActive = false;
+        private bool isNVDAAvailable = false;
+        private bool isSAPIAvailable = false;
+        private object sapiSynthesizer = null;
 
         public void Initialize(ManualLogSource log)
         {
@@ -153,21 +210,46 @@ namespace FM26AccessibilityPlugin
 
             try
             {
-                // Check if screen reader is running
+                // Check for NVDA first
+                isNVDAAvailable = CheckNVDAAvailability();
+                
+                // Check if any screen reader is running
                 isScreenReaderActive = CheckScreenReaderActive();
                 
-                if (isScreenReaderActive)
+                // Initialize SAPI as fallback
+                if (!isNVDAAvailable)
                 {
-                    logger.LogInfo("Screen reader detected and active!");
+                    isSAPIAvailable = InitializeSAPI();
                 }
-                else
-                {
-                    logger.LogWarning("No screen reader detected. Plugin will still function but output may not be heard.");
-                }
+                
+                LogScreenReaderStatus();
             }
             catch (Exception ex)
             {
                 logger.LogError($"Error initializing Screen Reader Interface: {ex}");
+            }
+        }
+
+        private bool CheckNVDAAvailability()
+        {
+            try
+            {
+                bool nvdaRunning = NVDAController.IsRunning();
+                if (nvdaRunning)
+                {
+                    logger.LogInfo("NVDA Controller Client is available and NVDA is running!");
+                    return true;
+                }
+                else
+                {
+                    logger.LogInfo("NVDA is not currently running or Controller Client not available.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning($"Could not connect to NVDA: {ex.Message}");
+                return false;
             }
         }
 
@@ -187,8 +269,53 @@ namespace FM26AccessibilityPlugin
             }
             catch (Exception ex)
             {
-                logger?.LogWarning($"Could not check for screen reader: {ex.Message}");
+                logger?.LogWarning($"Could not check for screen reader processes: {ex.Message}");
                 return false;
+            }
+        }
+
+        private bool InitializeSAPI()
+        {
+            try
+            {
+                var type = Type.GetType("System.Speech.Synthesis.SpeechSynthesizer, System.Speech, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+                
+                if (type != null)
+                {
+                    sapiSynthesizer = Activator.CreateInstance(type);
+                    logger.LogInfo("Windows SAPI initialized successfully.");
+                    return true;
+                }
+                else
+                {
+                    logger.LogWarning("System.Speech assembly not available. Text-to-speech may not work.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning($"Could not initialize SAPI: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void LogScreenReaderStatus()
+        {
+            if (isNVDAAvailable)
+            {
+                logger.LogInfo("✓ NVDA is active and will receive direct announcements");
+            }
+            else if (isScreenReaderActive && isSAPIAvailable)
+            {
+                logger.LogInfo("✓ Screen reader detected. Using Windows SAPI for announcements");
+            }
+            else if (isSAPIAvailable)
+            {
+                logger.LogWarning("No screen reader detected, but SAPI is available. You may hear system TTS.");
+            }
+            else
+            {
+                logger.LogError("⚠ No screen reader detected and SAPI unavailable. Accessibility features limited.");
             }
         }
 
@@ -202,10 +329,39 @@ namespace FM26AccessibilityPlugin
                 // Log what would be spoken
                 logger?.LogInfo($"[Screen Reader] {text}");
 
-                // Use Windows SAPI for text-to-speech
-                if (isScreenReaderActive || true) // Always try to speak
+                bool spoken = false;
+
+                // Try NVDA first if available
+                if (isNVDAAvailable)
+                {
+                    if (interrupt)
+                    {
+                        NVDAController.CancelSpeech();
+                    }
+                    spoken = NVDAController.Speak(text);
+                    
+                    if (spoken)
+                    {
+                        logger?.LogInfo("Spoke via NVDA Controller Client");
+                        return;
+                    }
+                    else
+                    {
+                        // NVDA may have closed, try to reinitialize
+                        logger?.LogWarning("NVDA speech failed, checking availability...");
+                        isNVDAAvailable = CheckNVDAAvailability();
+                    }
+                }
+
+                // Fallback to SAPI if NVDA unavailable or failed
+                if (isSAPIAvailable && sapiSynthesizer != null)
                 {
                     SpeakWithSAPI(text, interrupt);
+                    logger?.LogInfo("Spoke via Windows SAPI");
+                }
+                else
+                {
+                    logger?.LogWarning($"Could not speak text (no screen reader available): {text}");
                 }
             }
             catch (Exception ex)
@@ -218,30 +374,37 @@ namespace FM26AccessibilityPlugin
         {
             try
             {
-                // Use System.Speech for Windows TTS
-                // This will work with NVDA, JAWS, and Narrator
-                var type = Type.GetType("System.Speech.Synthesis.SpeechSynthesizer, System.Speech, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
+                if (sapiSynthesizer == null)
+                    return;
+
+                dynamic synth = sapiSynthesizer;
                 
-                if (type != null)
+                if (interrupt)
                 {
-                    dynamic synth = Activator.CreateInstance(type);
-                    
-                    if (interrupt)
-                    {
-                        synth.SpeakAsyncCancelAll();
-                    }
-                    
-                    synth.SpeakAsync(text);
+                    synth.SpeakAsyncCancelAll();
                 }
-                else
-                {
-                    // Fallback: Just log it
-                    logger?.LogInfo($"TTS: {text}");
-                }
+                
+                synth.SpeakAsync(text);
             }
             catch (Exception ex)
             {
-                logger?.LogWarning($"Could not use SAPI TTS: {ex.Message}");
+                logger?.LogWarning($"SAPI TTS error: {ex.Message}");
+                isSAPIAvailable = false;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Clean up SAPI synthesizer
+            if (sapiSynthesizer != null)
+            {
+                try
+                {
+                    dynamic synth = sapiSynthesizer;
+                    synth.Dispose();
+                }
+                catch { }
+                sapiSynthesizer = null;
             }
         }
     }
@@ -273,14 +436,18 @@ namespace FM26AccessibilityPlugin
 
         public void UpdateFocusedElement()
         {
-            if (eventSystem == null)
-            {
-                eventSystem = EventSystem.current;
-                return;
-            }
-
             try
             {
+                if (eventSystem == null)
+                {
+                    eventSystem = EventSystem.current;
+                    if (eventSystem == null)
+                    {
+                        // No EventSystem available yet, skip this update
+                        return;
+                    }
+                }
+
                 var currentSelected = eventSystem.currentSelectedGameObject;
                 
                 if (currentSelected != null && currentSelected != lastFocusedObject)
@@ -327,10 +494,18 @@ namespace FM26AccessibilityPlugin
                     return FormatAccessibleText(text.text, obj);
                 }
 
-                var tmpText = obj.GetComponent<TMPro.TextMeshProUGUI>();
-                if (tmpText != null && !string.IsNullOrEmpty(tmpText.text))
+                // Try TextMeshPro (may not be available in all Unity versions)
+                try
                 {
-                    return FormatAccessibleText(tmpText.text, obj);
+                    var tmpText = obj.GetComponent<TMPro.TextMeshProUGUI>();
+                    if (tmpText != null && !string.IsNullOrEmpty(tmpText.text))
+                    {
+                        return FormatAccessibleText(tmpText.text, obj);
+                    }
+                }
+                catch
+                {
+                    // TextMeshPro not available, skip
                 }
 
                 // Check for button
@@ -344,10 +519,17 @@ namespace FM26AccessibilityPlugin
                         return $"Button: {childText.text}";
                     }
                     
-                    var childTMP = obj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-                    if (childTMP != null)
+                    try
                     {
-                        return $"Button: {childTMP.text}";
+                        var childTMP = obj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                        if (childTMP != null)
+                        {
+                            return $"Button: {childTMP.text}";
+                        }
+                    }
+                    catch
+                    {
+                        // TextMeshPro not available
                     }
                     
                     return $"Button: {obj.name}";
@@ -370,7 +552,18 @@ namespace FM26AccessibilityPlugin
                 var inputField = obj.GetComponent<InputField>();
                 if (inputField != null)
                 {
-                    return $"Input field: {inputField.placeholder?.GetComponent<Text>()?.text ?? obj.name}. Current value: {inputField.text}";
+                    string placeholderText = "";
+                    if (inputField.placeholder != null)
+                    {
+                        var placeholderTextComp = inputField.placeholder.GetComponent<Text>();
+                        if (placeholderTextComp != null)
+                        {
+                            placeholderText = placeholderTextComp.text;
+                        }
+                    }
+                    
+                    string label = !string.IsNullOrEmpty(placeholderText) ? placeholderText : obj.name;
+                    return $"Input field: {label}. Current value: {inputField.text}";
                 }
 
                 // Fallback to object name
@@ -379,7 +572,7 @@ namespace FM26AccessibilityPlugin
             catch (Exception ex)
             {
                 logger?.LogError($"Error getting accessible name: {ex}");
-                return obj.name;
+                return obj?.name ?? "Unknown";
             }
         }
 
