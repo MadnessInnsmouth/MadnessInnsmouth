@@ -103,7 +103,7 @@ Available settings:
 
 ### Installation Issues
 
-- Run installer as Administrator
+- The installer works without administrator privileges in most cases
 - Manually specify FM26 path if auto-detection fails
 - Re-run installer with `-Force` flag to reinstall
 

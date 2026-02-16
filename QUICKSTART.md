@@ -24,9 +24,10 @@ Before you start, make sure you have:
 ### Step 2: Run the Installer
 
 1. **Double-click** `Install-FM26Accessibility.bat` to launch the installer
-2. If you see a security warning, click **"Run anyway"** or press **Y**
-3. Follow the on-screen instructions
-4. The installer will:
+2. If you see a security warning, click **"Run anyway"**
+3. The installer will proceed automatically — administrator privileges are not required
+4. Follow the on-screen instructions
+5. The installer will:
    - Find your FM26 installation automatically
    - Download BepInEx (the modding framework)
    - Install the accessibility plugin
