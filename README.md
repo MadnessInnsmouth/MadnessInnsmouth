@@ -2,6 +2,10 @@
 
 A comprehensive accessibility modification for Football Manager 2026 that makes the game fully accessible to screen readers and blind players.
 
+> **🚨 USERS: Download from [Releases](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases), NOT the green "Code" button!**
+> 
+> The green "Code" button downloads source code (for developers). You want the pre-built release ZIP.
+
 > **⚡ Quick Start:** See [QUICKSTART.md](QUICKSTART.md) for step-by-step installation instructions!
 
 ## ✨ Features
@@ -30,19 +34,29 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 
 ## 🚀 Installation
 
+### ⚠️ Important: Download the Right File!
+
+**Download the PRE-BUILT RELEASE, not the source code!**
+
+On the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases), download the file named:
+- ✅ `FM26-Accessibility-Mod-vX.X.X.zip` **(Download this one!)**
+- ❌ NOT "Source code (zip)" - that's for developers only
+
 ### Option 1: Quick Install (Recommended)
 
-1. **Download** the latest release from the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases)
-2. **Extract** the ZIP file
+1. **Download** the latest release ZIP from the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases)
+   - Look for `FM26-Accessibility-Mod-vX.X.X.zip` (where X.X.X is the version number)
+   - **DO NOT** download "Source code" - that requires building from source
+2. **Extract** the ZIP file to a folder (e.g., `C:\FM26Mod\`)
 3. **Run** `Install-FM26Accessibility.bat` (double-click to launch the installer)
 4. **Follow** the on-screen instructions
 5. **Launch** Football Manager 2026
 
 That's it! The installer handles everything else automatically.
 
-### Option 2: Manual Installation
+### Option 2: Building from Source
 
-See [BUILD.md](BUILD.md) for manual installation and building from source.
+See [BUILD.md](BUILD.md) for building from source (requires .NET SDK and FM26 Unity libraries).
 
 ## 📖 Documentation
 

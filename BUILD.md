@@ -1,5 +1,24 @@
 # FM26 Accessibility Plugin - Build Instructions
 
+## ⚠️ Do You Need to Build from Source?
+
+**Most users DON'T need to build from source!**
+
+### You DON'T need to build if:
+- ✅ You just want to use the mod
+- ✅ You downloaded from the Releases page
+- ✅ You just want to play FM26 with accessibility features
+
+→ **Just download the pre-built release and run the installer!**
+
+### You DO need to build if:
+- 🔧 You're contributing code changes
+- 🔧 You're testing unreleased features
+- 🔧 You're a developer wanting to modify the mod
+- 🔧 There's no pre-built release available yet
+
+---
+
 ## Building the Plugin
 
 This plugin requires BepInEx libraries to build. Since these are not available on standard NuGet feeds, you have two options:

@@ -421,25 +421,57 @@ function Install-AccessibilityPlugin {
     
     # Check if plugin DLL exists
     if (-not $sourcePluginPath) {
-        Write-Host "  [ERROR] Plugin DLL not found in any of the checked locations." -ForegroundColor Red
         Write-Host ""
-        Write-Host "  Please build the plugin first using one of these methods:" -ForegroundColor Yellow
-        Write-Host "    1. Run: dotnet build (from the repository root)" -ForegroundColor White
-        Write-Host "    2. Run: .\build\build.ps1" -ForegroundColor White
-        Write-Host "    3. Download a pre-built release from GitHub" -ForegroundColor White
+        Write-Host "============================================" -ForegroundColor Red
+        Write-Host "  INSTALLATION CANNOT PROCEED" -ForegroundColor Red
+        Write-Host "============================================" -ForegroundColor Red
         Write-Host ""
-        Write-Host "  [VERBOSE] Listing contents of build directory:" -ForegroundColor Gray
+        Write-Host "  The plugin DLL was not found." -ForegroundColor Yellow
+        Write-Host "  This usually means you downloaded the SOURCE CODE instead of a PRE-BUILT RELEASE." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "--- SOLUTION: Download the Pre-Built Release ---" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  1. Go to: https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  2. Download the latest ZIP file named like:" -ForegroundColor White
+        Write-Host "     FM26-Accessibility-Mod-vX.X.X.zip" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "     (NOT the 'Source code' links - those require building)" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  3. Extract the ZIP and run this installer again." -ForegroundColor White
+        Write-Host ""
+        Write-Host "--- Alternative: Build from Source ---" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  If you want to build the plugin yourself:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  1. Install .NET SDK from: https://dotnet.microsoft.com/download" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  2. Open PowerShell in the repository root and run:" -ForegroundColor White
+        Write-Host "     .\build\build.ps1" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  3. Run this installer again after the build completes." -ForegroundColor White
+        Write-Host ""
+        Write-Host "--- Technical Details ---" -ForegroundColor Gray
+        Write-Host "  Expected file: FM26AccessibilityPlugin.dll" -ForegroundColor Gray
+        Write-Host "  Checked locations:" -ForegroundColor Gray
+        foreach ($candidate in $pluginCandidates) {
+            Write-Host "    - $candidate" -ForegroundColor Gray
+        }
+        Write-Host ""
         $buildDir = Join-Path $PSScriptRoot "build"
         if (-not (Test-Path $buildDir)) {
             $buildDir = Join-Path (Split-Path -Parent $PSScriptRoot) "build"
         }
         if (Test-Path $buildDir) {
+            Write-Host "  Contents of build directory:" -ForegroundColor Gray
             Get-ChildItem -Path $buildDir -ErrorAction SilentlyContinue | ForEach-Object {
                 Write-Host "    $($_.Name)  ($($_.Length) bytes)" -ForegroundColor Gray
             }
         } else {
-            Write-Host "    (build directory does not exist)" -ForegroundColor Gray
+            Write-Host "  Build directory: does not exist" -ForegroundColor Gray
         }
+        Write-Host ""
+        Write-Host "============================================" -ForegroundColor Red
         return $false
     }
     

@@ -29,6 +29,28 @@ Before diving into specific issues, run this quick check:
 
 ## Installation Issues
 
+### Downloaded Source Code Instead of Release
+
+**Symptom**: Installer says "Plugin DLL not found" or "Please build the plugin first"
+
+**Cause**: You downloaded the source code (for developers) instead of the pre-built release (for users).
+
+**Solution**:
+
+1. **Download the correct file**:
+   - Go to: https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases
+   - Download the file named: `FM26-Accessibility-Mod-vX.X.X.zip`
+   - **NOT** the "Source code (zip)" or "Source code (tar.gz)" links
+
+2. **How to identify the correct file**:
+   - ✅ **Correct**: `FM26-Accessibility-Mod-v1.0.0.zip` (example)
+   - ❌ **Wrong**: "Source code (zip)" - this is for developers only
+
+3. **Why this matters**:
+   - The pre-built release contains `FM26AccessibilityPlugin.dll` (ready to install)
+   - The source code requires .NET SDK and building before it can be used
+   - Most users want the pre-built release, not the source code
+
 ### Installer Can't Find FM26
 
 **Symptom**: "Could not find Football Manager 2026 installation"

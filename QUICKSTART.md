@@ -17,9 +17,17 @@ Before you start, make sure you have:
 
 ### Step 1: Download the Mod
 
+**⚠️ IMPORTANT: Download the correct file!**
+
 1. Go to the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases)
-2. Download the latest `FM26-Accessibility-Mod-vX.X.X.zip` file
+2. Download the latest **`FM26-Accessibility-Mod-vX.X.X.zip`** file
+   - This is the pre-built release that's ready to install
+   - **DO NOT download "Source code (zip)"** - that's only for developers who want to build from source
 3. Extract the ZIP file to a folder (e.g., `C:\FM26Mod\`)
+
+**How to tell the difference:**
+- ✅ **Correct**: File named `FM26-Accessibility-Mod-vX.X.X.zip` (contains pre-built DLL)
+- ❌ **Wrong**: "Source code (zip)" link (requires .NET SDK to build)
 
 ### Step 2: Run the Installer
 
