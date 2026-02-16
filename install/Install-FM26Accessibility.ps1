@@ -193,22 +193,26 @@ function Extract-ZipFile {
             $filesCreated = 0
             
             foreach ($entry in $zip.Entries) {
-                $targetFile = Join-Path $DestPath $entry.FullName
+                $targetPath = Join-Path $DestPath $entry.FullName
                 
-                # Create directory if it doesn't exist
-                $targetDir = Split-Path $targetFile -Parent
+                # Handle directory entries (Length = 0 and name ends with /)
+                if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                    # Create the directory if it doesn't exist
+                    if (-not (Test-Path $targetPath)) {
+                        New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
+                    }
+                    continue
+                }
+                
+                # For file entries, ensure parent directory exists
+                $targetDir = Split-Path $targetPath -Parent
                 if ($targetDir -and -not (Test-Path $targetDir)) {
                     New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
                 }
                 
-                # Skip if this is a directory entry (Length = 0 and name ends with /)
-                if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
-                    continue
-                }
-                
                 # Remove existing file if present
-                if (Test-Path $targetFile) {
-                    Remove-Item $targetFile -Force
+                if (Test-Path $targetPath) {
+                    Remove-Item $targetPath -Force
                     $filesOverwritten++
                 } else {
                     $filesCreated++
@@ -216,7 +220,7 @@ function Extract-ZipFile {
                 
                 # Extract the file
                 if ($entry.Length -gt 0) {
-                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetFile)
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
                 }
             }
             
@@ -403,19 +407,30 @@ function Install-NVDAControllerClient {
             $zip = [System.IO.Compression.ZipFile]::OpenRead($tempZip)
             try {
                 foreach ($entry in $zip.Entries) {
-                    $targetFile = Join-Path $tempDir $entry.FullName
-                    $targetDir = Split-Path $targetFile -Parent
+                    $targetPath = Join-Path $tempDir $entry.FullName
+                    
+                    # Handle directory entries
+                    if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                        if (-not (Test-Path $targetPath)) {
+                            New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
+                        }
+                        continue
+                    }
+                    
+                    # For file entries, ensure parent directory exists
+                    $targetDir = Split-Path $targetPath -Parent
                     if ($targetDir -and -not (Test-Path $targetDir)) {
                         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
                     }
-                    if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
-                        continue
+                    
+                    # Remove existing file if present
+                    if (Test-Path $targetPath) {
+                        Remove-Item $targetPath -Force
                     }
-                    if (Test-Path $targetFile) {
-                        Remove-Item $targetFile -Force
-                    }
+                    
+                    # Extract the file
                     if ($entry.Length -gt 0) {
-                        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetFile)
+                        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
                     }
                 }
             } finally {
