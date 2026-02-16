@@ -155,7 +155,7 @@ function Download-File {
     return $false
 }
 
-# Function to extract zip file
+# Function to extract zip file with overwrite support
 function Extract-ZipFile {
     param(
         [string]$ZipPath,
@@ -180,22 +180,59 @@ function Extract-ZipFile {
         Write-Host "  [VERBOSE] Zip file size: $([math]::Round($zipSize / 1MB, 2)) MB" -ForegroundColor Gray
         Write-Host "  [VERBOSE] Loading System.IO.Compression.FileSystem assembly..." -ForegroundColor Gray
         
-        # Use .NET for extraction
+        # Use .NET for extraction with overwrite support
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         
-        Write-Host "  [VERBOSE] Extracting archive contents..." -ForegroundColor Gray
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestPath)
+        Write-Host "  [VERBOSE] Extracting archive contents (with overwrite)..." -ForegroundColor Gray
         
-        Write-Host "  Extraction complete!" -ForegroundColor Green
-        return $true
+        # Open the zip file for reading
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+        
+        try {
+            $filesOverwritten = 0
+            $filesCreated = 0
+            
+            foreach ($entry in $zip.Entries) {
+                $targetFile = Join-Path $DestPath $entry.FullName
+                
+                # Create directory if it doesn't exist
+                $targetDir = Split-Path $targetFile -Parent
+                if ($targetDir -and -not (Test-Path $targetDir)) {
+                    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+                }
+                
+                # Skip if this is a directory entry (Length = 0 and name ends with /)
+                if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                    continue
+                }
+                
+                # Remove existing file if present
+                if (Test-Path $targetFile) {
+                    Remove-Item $targetFile -Force
+                    $filesOverwritten++
+                } else {
+                    $filesCreated++
+                }
+                
+                # Extract the file
+                if ($entry.Length -gt 0) {
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetFile)
+                }
+            }
+            
+            Write-Host "  Extraction complete! (Created: $filesCreated, Overwritten: $filesOverwritten)" -ForegroundColor Green
+            return $true
+        } finally {
+            $zip.Dispose()
+        }
     } catch {
         Write-Host "  [ERROR] Extraction failed: $($_.Exception.GetType().FullName)" -ForegroundColor Red
         Write-Host "  [ERROR] Message: $($_.Exception.Message)" -ForegroundColor Red
         if ($_.Exception.InnerException) {
             Write-Host "  [ERROR] Inner: $($_.Exception.InnerException.Message)" -ForegroundColor Red
         }
-        Write-Host "  [HINT]  This may happen if the zip file is corrupted, the destination already exists," -ForegroundColor Yellow
-        Write-Host "          or the destination path has permission issues. Try running as Administrator." -ForegroundColor Yellow
+        Write-Host "  [HINT]  This may happen if the zip file is corrupted or the destination path" -ForegroundColor Yellow
+        Write-Host "          has permission issues. Try running as Administrator." -ForegroundColor Yellow
         return $false
     }
 }
@@ -361,7 +398,30 @@ function Install-NVDAControllerClient {
     if ($downloadSuccess) {
         try {
             Add-Type -AssemblyName System.IO.Compression.FileSystem
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($tempZip, $tempDir)
+            
+            # Extract with overwrite support (using same approach as Extract-ZipFile)
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($tempZip)
+            try {
+                foreach ($entry in $zip.Entries) {
+                    $targetFile = Join-Path $tempDir $entry.FullName
+                    $targetDir = Split-Path $targetFile -Parent
+                    if ($targetDir -and -not (Test-Path $targetDir)) {
+                        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+                    }
+                    if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                        continue
+                    }
+                    if (Test-Path $targetFile) {
+                        Remove-Item $targetFile -Force
+                    }
+                    if ($entry.Length -gt 0) {
+                        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetFile)
+                    }
+                }
+            } finally {
+                $zip.Dispose()
+            }
+            
             $extractedDll = Join-Path $tempDir "x64\nvdaControllerClient64.dll"
             if (Test-Path $extractedDll) {
                 Copy-Item -Path $extractedDll -Destination $nvdaDllPath -Force
