@@ -495,7 +495,7 @@ function Build-PluginAutomatically {
             Write-Host "  [INFO] Copying Unity assemblies from FM26..." -ForegroundColor Cyan
             $unityDlls = @(
                 "UnityEngine.dll",
-                "UnityEngine.CoreModule.dll", 
+                "UnityEngine.CoreModule.dll",
                 "UnityEngine.UI.dll",
                 "UnityEngine.TextRenderingModule.dll"
             )
@@ -614,7 +614,7 @@ function Install-AccessibilityPlugin {
             Write-Host "    4. Run this installer again" -ForegroundColor White
             Write-Host ""
             Write-Host "  Option 2: Use Repository" -ForegroundColor Cyan
-            Write-Host "    1. Clone: https://github.com/MadnessInnsmouth/MadnessInnsmouth" -ForegroundColor White
+            Write-Host "    1. Clone: https://github.com/MadnessInnsmouth/MadnessInnsmouth.git" -ForegroundColor White
             Write-Host "    2. Run: .\build\build.ps1" -ForegroundColor White
             Write-Host "    3. Run: .\install\Install-FM26Accessibility.ps1" -ForegroundColor White
             Write-Host ""
