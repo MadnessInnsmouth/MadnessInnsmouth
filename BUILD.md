@@ -17,7 +17,9 @@ Download the latest pre-built release from the [Releases page](https://github.co
    - Install .NET 6.0 SDK
 
 2. **Cpp2IL** (for generating IL2CPP interop assemblies)
-   - Download from: https://github.com/SamboyCoding/Cpp2IL/releases
+   - **Auto-installed by build script** - The build script will automatically install Cpp2IL if it's not already present
+   - Alternatively, manually install: `dotnet tool install -g Cpp2IL`
+   - Or download from: https://github.com/SamboyCoding/Cpp2IL/releases
    - Used to generate interop assemblies from FM26's `GameAssembly.dll` and `fm_Data/il2cpp_data/Metadata/global-metadata.dat`
 
 3. **IL2CPP Interop Assemblies**
@@ -64,9 +66,10 @@ For convenience, we've included a build script that handles everything:
 This script will:
 1. Check for required dependencies
 2. Download BepInEx 6 (IL2CPP) if needed
-3. Run Cpp2IL to generate interop assemblies from your FM26 installation
-4. Build the plugin
-5. Create a release package
+3. **Auto-install Cpp2IL if not already present**
+4. Run Cpp2IL to generate interop assemblies from your FM26 installation
+5. Build the plugin
+6. Create a release package
 
 ## After Building
 

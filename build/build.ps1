@@ -153,6 +153,38 @@ function Generate-InteropAssemblies {
         } catch {}
     }
     
+    # Auto-install Cpp2IL if not found
+    if (-not $cpp2ilPath) {
+        Write-Host ""
+        Write-Host "  Cpp2IL is not installed. Installing automatically..." -ForegroundColor Yellow
+        Write-Host "  Running: dotnet tool install -g Cpp2IL" -ForegroundColor Gray
+        
+        try {
+            $installOutput = & dotnet tool install -g Cpp2IL 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "  Cpp2IL installed successfully!" -ForegroundColor Green
+                $cpp2ilPath = "Cpp2IL"
+                
+                # Refresh PATH to ensure Cpp2IL is accessible
+                $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+            } else {
+                Write-Host "  Failed to install Cpp2IL automatically." -ForegroundColor Red
+                Write-Host "  Please install manually: dotnet tool install -g Cpp2IL" -ForegroundColor Yellow
+                Write-Host "  Then restart PowerShell and run this script again." -ForegroundColor Yellow
+                return $false
+            }
+        } catch {
+            Write-Host "  Error installing Cpp2IL: $_" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "  Please install manually:" -ForegroundColor Yellow
+            Write-Host "    1. Run: dotnet tool install -g Cpp2IL" -ForegroundColor White
+            Write-Host "    2. Restart PowerShell" -ForegroundColor White
+            Write-Host "    3. Run this script again" -ForegroundColor White
+            Write-Host ""
+            return $false
+        }
+    }
+    
     if ($cpp2ilPath) {
         Write-Host "  Using Cpp2IL to generate interop assemblies..."
         try {
@@ -165,9 +197,9 @@ function Generate-InteropAssemblies {
     }
     
     Write-Host ""
-    Write-Host "  Cpp2IL is not installed. To generate interop assemblies:" -ForegroundColor Yellow
+    Write-Host "  Unable to use Cpp2IL. To generate interop assemblies manually:" -ForegroundColor Yellow
     Write-Host "    1. Install Cpp2IL: dotnet tool install -g Cpp2IL" -ForegroundColor White
-    Write-Host "    2. Or download from: https://github.com/SamboyCoding/Cpp2IL/releases" -ForegroundColor White
+    Write-Host "    2. Restart PowerShell" -ForegroundColor White
     Write-Host "    3. Run: Cpp2IL --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopDir`"" -ForegroundColor White
     Write-Host ""
     Write-Host "  Alternatively, place generated interop DLLs in: $interopDir" -ForegroundColor Yellow
@@ -316,9 +348,9 @@ try {
                 Write-Host "Build may fail without these assemblies." -ForegroundColor Yellow
                 Write-Host ""
                 Write-Host "To generate them:" -ForegroundColor Cyan
-                Write-Host "  1. Install Cpp2IL: dotnet tool install -g Cpp2IL" -ForegroundColor White
-                Write-Host "  2. Run this script with -FM26Path pointing to your FM26 installation" -ForegroundColor White
-                Write-Host "  3. Or manually place interop DLLs in: $interopDir" -ForegroundColor White
+                Write-Host "  1. Run this script with -FM26Path pointing to your FM26 installation" -ForegroundColor White
+                Write-Host "     The script will auto-install Cpp2IL if needed" -ForegroundColor Gray
+                Write-Host "  2. Or manually place interop DLLs in: $interopDir" -ForegroundColor White
             }
         } else {
             Write-Host "IL2CPP interop assemblies already present." -ForegroundColor Green
