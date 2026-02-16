@@ -4,7 +4,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -13,63 +15,44 @@ using UnityEngine.SceneManagement;
 namespace FM26AccessibilityPlugin
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-    public class AccessibilityPlugin : BaseUnityPlugin
+    public class AccessibilityPlugin : BasePlugin
     {
         private static ManualLogSource logSource;
         private Harmony harmony;
 
-        private void Awake()
+        public override void Load()
         {
-            logSource = Logger;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-            Logger.LogInfo("Initializing FM26 Accessibility Plugin...");
+            logSource = Log;
+            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Log.LogInfo("Initializing FM26 Accessibility Plugin...");
 
             try
             {
+                // Register IL2CPP custom types so Unity can instantiate them
+                ClassInjector.RegisterTypeInIl2Cpp<AccessibilityManager>();
+                ClassInjector.RegisterTypeInIl2Cpp<ScreenReaderInterface>();
+                ClassInjector.RegisterTypeInIl2Cpp<UIAccessibilityTracker>();
+                ClassInjector.RegisterTypeInIl2Cpp<MainMenuNarrator>();
+
                 // Initialize Harmony for patching
                 harmony = new Harmony(PluginInfo.PLUGIN_GUID);
                 harmony.PatchAll();
-                Logger.LogInfo("Harmony patches applied successfully!");
+                Log.LogInfo("Harmony patches applied successfully!");
 
-                // Initialize the accessibility manager
-                StartCoroutine(InitializeAccessibilityManager());
-                
-                Logger.LogInfo("FM26 Accessibility Plugin initialized successfully!");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Failed to initialize plugin: {ex}");
-            }
-        }
-
-        private System.Collections.IEnumerator InitializeAccessibilityManager()
-        {
-            // Wait a few frames to ensure Unity is ready
-            for (int i = 0; i < 10; i++)
-            {
-                yield return null;
-            }
-
-            try
-            {
                 // Create the accessibility manager GameObject
                 var managerObj = new GameObject("FM26AccessibilityManager");
-                DontDestroyOnLoad(managerObj);
-                
+                GameObject.DontDestroyOnLoad(managerObj);
+                managerObj.hideFlags = HideFlags.HideAndDontSave;
+
                 var manager = managerObj.AddComponent<AccessibilityManager>();
-                manager.Initialize(Logger);
-                
-                Logger.LogInfo("Accessibility Manager created successfully!");
+                manager.Initialize(Log);
+
+                Log.LogInfo("FM26 Accessibility Plugin initialized successfully!");
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Failed to create Accessibility Manager: {ex}");
+                Log.LogError($"Failed to initialize plugin: {ex}");
             }
-        }
-
-        private void OnDestroy()
-        {
-            harmony?.UnpatchSelf();
         }
 
         internal static void Log(string message)
@@ -100,6 +83,8 @@ namespace FM26AccessibilityPlugin
         private float updateInterval = 0.1f;
         private float nextUpdate = 0f;
         private string lastSceneName = "";
+
+        public AccessibilityManager(IntPtr ptr) : base(ptr) { }
 
         public void Initialize(ManualLogSource log)
         {
@@ -185,6 +170,8 @@ namespace FM26AccessibilityPlugin
     {
         private ManualLogSource logger;
         private ScreenReaderInterface screenReader;
+
+        public MainMenuNarrator(IntPtr ptr) : base(ptr) { }
 
         // Known main-menu button labels (case-insensitive matching)
         private static readonly string[] MainMenuLabels = new[]
@@ -424,6 +411,8 @@ namespace FM26AccessibilityPlugin
         private object sapiSynthesizer = null;
         private float nextScreenReaderCheck = 0f;
         private const float ScreenReaderCheckInterval = 10f;
+
+        public ScreenReaderInterface(IntPtr ptr) : base(ptr) { }
 
         public void Initialize(ManualLogSource log)
         {
@@ -668,6 +657,8 @@ namespace FM26AccessibilityPlugin
         private ScreenReaderInterface screenReader;
         private GameObject lastFocusedObject;
         private EventSystem eventSystem;
+
+        public UIAccessibilityTracker(IntPtr ptr) : base(ptr) { }
 
         public void Initialize(ManualLogSource log, ScreenReaderInterface reader)
         {

@@ -1,5 +1,6 @@
 # FM26 Accessibility Plugin Build Script
 # Downloads dependencies and builds the plugin
+# Updated for BepInEx 6 (IL2CPP) support
 
 param(
     [string]$Configuration = "Release",
@@ -12,6 +13,7 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  FM26 Accessibility Plugin Build Script" -ForegroundColor Cyan
+Write-Host "  (BepInEx 6 / IL2CPP)" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -27,7 +29,7 @@ try {
     Write-Host ""
     Write-Host "ERROR: .NET SDK is not installed or not on PATH" -ForegroundColor Red
     Write-Host ""
-    Write-Host "The .NET SDK is required to build the FM26 Accessibility Plugin." -ForegroundColor Yellow
+    Write-Host "The .NET SDK (6.0 or later) is required to build the FM26 Accessibility Plugin." -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Please install it from:" -ForegroundColor Cyan
     Write-Host "  https://dotnet.microsoft.com/download" -ForegroundColor White
@@ -41,15 +43,44 @@ Write-Host ""
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Split-Path -Parent $scriptDir
 $libDir = Join-Path $rootDir "lib"
+$interopDir = Join-Path $libDir "interop"
 $srcDir = Join-Path $rootDir "src\FM26AccessibilityPlugin"
 
-# BepInEx configuration
-$bepInExVersion = "5.4.23.2"
-$bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.zip"
+# BepInEx 6 configuration (IL2CPP build)
+$bepInExVersion = "6.0.0-be.688"
+$bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx-Unity.IL2CPP-win-x64-$bepInExVersion.zip"
 
-# Function to download and extract BepInEx
+# Function to detect IL2CPP vs Mono build
+function Detect-GameRuntime {
+    param([string]$GamePath)
+    
+    if ([string]::IsNullOrEmpty($GamePath)) { return $null }
+    
+    $gameAssembly = Join-Path $GamePath "GameAssembly.dll"
+    $il2cppMetadata = Join-Path $GamePath "fm_Data\il2cpp_data\Metadata\global-metadata.dat"
+    $managedFolder = Join-Path $GamePath "fm_Data\Managed"
+    
+    if ((Test-Path $gameAssembly) -and (Test-Path $il2cppMetadata)) {
+        Write-Host "  Detected: IL2CPP build" -ForegroundColor Green
+        Write-Host "    GameAssembly.dll: $gameAssembly" -ForegroundColor Gray
+        Write-Host "    Metadata: $il2cppMetadata" -ForegroundColor Gray
+        return "IL2CPP"
+    }
+    
+    if (Test-Path $managedFolder) {
+        Write-Host "  Detected: Mono build" -ForegroundColor Yellow
+        Write-Host "    WARNING: This build script targets IL2CPP." -ForegroundColor Yellow
+        Write-Host "    If you have a Mono build, use the legacy BepInEx 5 branch." -ForegroundColor Yellow
+        return "Mono"
+    }
+    
+    Write-Host "  Could not determine game runtime." -ForegroundColor Yellow
+    return $null
+}
+
+# Function to download and extract BepInEx 6
 function Get-BepInExLibraries {
-    Write-Host "Downloading BepInEx libraries..." -ForegroundColor Yellow
+    Write-Host "Downloading BepInEx 6 IL2CPP libraries..." -ForegroundColor Yellow
     
     $tempDir = Join-Path $env:TEMP "FM26Build_Temp"
     if (Test-Path $tempDir) {
@@ -66,32 +97,90 @@ function Get-BepInExLibraries {
         Write-Host "Download complete!" -ForegroundColor Green
         
         # Extract
-        Write-Host "Extracting BepInEx..."
+        Write-Host "Extracting BepInEx 6..."
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $tempDir)
         
-        # Copy required DLLs
-        Write-Host "Copying libraries to lib folder..."
-        Copy-Item -Path (Join-Path $tempDir "BepInEx\core\BepInEx.dll") -Destination $libDir -Force
-        Copy-Item -Path (Join-Path $tempDir "BepInEx\core\0Harmony.dll") -Destination $libDir -Force
-        
-        Write-Host "BepInEx libraries obtained successfully!" -ForegroundColor Green
+        Write-Host "BepInEx 6 IL2CPP libraries obtained successfully!" -ForegroundColor Green
         
         # Clean up
         Remove-Item $tempDir -Recurse -Force
         return $true
     } catch {
-        Write-Host "Failed to download BepInEx: $_" -ForegroundColor Red
+        Write-Host "Failed to download BepInEx 6: $_" -ForegroundColor Red
         return $false
     }
 }
 
-# Function to get Unity libraries from FM26
-function Get-UnityLibraries {
+# Function to generate IL2CPP interop assemblies using Cpp2IL
+function Generate-InteropAssemblies {
+    param([string]$GamePath)
+    
+    Write-Host ""
+    Write-Host "Generating IL2CPP interop assemblies..." -ForegroundColor Yellow
+    
+    $gameAssembly = Join-Path $GamePath "GameAssembly.dll"
+    $globalMetadata = Join-Path $GamePath "fm_Data\il2cpp_data\Metadata\global-metadata.dat"
+    
+    if (-not (Test-Path $gameAssembly)) {
+        Write-Host "  GameAssembly.dll not found at: $gameAssembly" -ForegroundColor Red
+        return $false
+    }
+    
+    if (-not (Test-Path $globalMetadata)) {
+        Write-Host "  global-metadata.dat not found at: $globalMetadata" -ForegroundColor Red
+        return $false
+    }
+    
+    # Create interop output directory
+    if (-not (Test-Path $interopDir)) {
+        New-Item -ItemType Directory -Path $interopDir | Out-Null
+    }
+    
+    # Check if Cpp2IL is available
+    $cpp2ilPath = $null
+    try {
+        $cpp2ilPath = (Get-Command "Cpp2IL" -ErrorAction SilentlyContinue).Source
+    } catch {}
+    
+    if (-not $cpp2ilPath) {
+        # Try to find it as a dotnet tool
+        try {
+            & dotnet tool list -g 2>&1 | Select-String "Cpp2IL" | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                $cpp2ilPath = "Cpp2IL"
+            }
+        } catch {}
+    }
+    
+    if ($cpp2ilPath) {
+        Write-Host "  Using Cpp2IL to generate interop assemblies..."
+        try {
+            & $cpp2ilPath --game-path $GamePath --output-as "dummydll" --output-to $interopDir
+            Write-Host "  Interop assemblies generated!" -ForegroundColor Green
+            return $true
+        } catch {
+            Write-Host "  Cpp2IL failed: $_" -ForegroundColor Red
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "  Cpp2IL is not installed. To generate interop assemblies:" -ForegroundColor Yellow
+    Write-Host "    1. Install Cpp2IL: dotnet tool install -g Cpp2IL" -ForegroundColor White
+    Write-Host "    2. Or download from: https://github.com/SamboyCoding/Cpp2IL/releases" -ForegroundColor White
+    Write-Host "    3. Run: Cpp2IL --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopDir`"" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  Alternatively, place generated interop DLLs in: $interopDir" -ForegroundColor Yellow
+    
+    return $false
+}
+
+# Function to search for FM26 installation
+function Find-FM26Installation {
     param([string]$ProvidedFM26Path = "")
     
     Write-Host ""
-    Write-Host "Searching for Unity libraries from FM26 installation..." -ForegroundColor Yellow
+    Write-Host "Searching for FM26 installation..." -ForegroundColor Yellow
     
     $fm26Path = $null
     
@@ -99,16 +188,12 @@ function Get-UnityLibraries {
     if (-not [string]::IsNullOrEmpty($ProvidedFM26Path)) {
         Write-Host "Using provided FM26 path: $ProvidedFM26Path" -ForegroundColor Green
         if (Test-Path $ProvidedFM26Path) {
-            $managedPath = Join-Path $ProvidedFM26Path "fm_Data\Managed"
-            if (Test-Path $managedPath) {
-                $fm26Path = $managedPath
-            }
+            $fm26Path = $ProvidedFM26Path
         }
     }
     
     # If not found or not provided, try to auto-detect
     if (-not $fm26Path) {
-        # Try to find FM26
         $fm26Paths = @(
             "C:\Program Files (x86)\Steam\steamapps\common\Football Manager 2026",
             "C:\Program Files\Steam\steamapps\common\Football Manager 2026",
@@ -126,11 +211,8 @@ function Get-UnityLibraries {
         
         foreach ($path in $fm26Paths) {
             if (Test-Path $path) {
-                $managedPath = Join-Path $path "fm_Data\Managed"
-                if (Test-Path $managedPath) {
-                    $fm26Path = $managedPath
-                    break
-                }
+                $fm26Path = $path
+                break
             }
         }
     }
@@ -138,42 +220,25 @@ function Get-UnityLibraries {
     if ($fm26Path) {
         Write-Host "Found FM26 at: $fm26Path" -ForegroundColor Green
         
-        $requiredDlls = @(
-            "UnityEngine.dll",
-            "UnityEngine.CoreModule.dll",
-            "UnityEngine.UI.dll",
-            "UnityEngine.TextRenderingModule.dll"
-        )
+        # Detect runtime
+        $runtime = Detect-GameRuntime -GamePath $fm26Path
         
-        $allFound = $true
-        foreach ($dll in $requiredDlls) {
-            $sourcePath = Join-Path $fm26Path $dll
-            if (Test-Path $sourcePath) {
-                Copy-Item -Path $sourcePath -Destination $libDir -Force
-                Write-Host "  Copied: $dll" -ForegroundColor Green
-            } else {
-                Write-Host "  Missing: $dll" -ForegroundColor Red
-                $allFound = $false
-            }
+        if ($runtime -eq "IL2CPP") {
+            # Generate interop assemblies
+            $hasInterop = Generate-InteropAssemblies -GamePath $fm26Path
+            return $hasInterop
+        } elseif ($runtime -eq "Mono") {
+            Write-Host ""
+            Write-Host "NOTE: FM26 appears to be a Mono build." -ForegroundColor Yellow
+            Write-Host "This version of the plugin targets IL2CPP." -ForegroundColor Yellow
+            return $false
         }
-        
-        return $allFound
     } else {
         Write-Host "Could not find FM26 installation." -ForegroundColor Yellow
-        Write-Host "Unity DLLs must be provided manually to lib folder." -ForegroundColor Yellow
+        Write-Host "IL2CPP interop assemblies must be provided manually to lib/interop/ folder." -ForegroundColor Yellow
         return $false
     }
-}
-
-# Function to create stub DLLs if real ones aren't available
-function Create-StubReferences {
-    Write-Host ""
-    Write-Host "Creating stub reference assemblies..." -ForegroundColor Yellow
-    Write-Host "Note: These stubs allow building but won't work at runtime." -ForegroundColor Yellow
-    Write-Host "For a working plugin, use real libraries from BepInEx and FM26." -ForegroundColor Yellow
     
-    # This is a simplified approach - we'll just document that stubs are needed
-    # In a real scenario, we'd create minimal assemblies with publicized types
     return $false
 }
 
@@ -185,7 +250,7 @@ function Build-Plugin {
     try {
         Push-Location $rootDir
         
-        # Restore dependencies
+        # Restore dependencies (uses NuGet.config for BepInEx feed)
         Write-Host "Restoring dependencies..."
         dotnet restore $srcDir\FM26AccessibilityPlugin.csproj
         
@@ -193,7 +258,7 @@ function Build-Plugin {
         Write-Host "Building in $Configuration configuration..."
         dotnet build $srcDir\FM26AccessibilityPlugin.csproj --configuration $Configuration --no-restore
         
-        $builtDll = Join-Path $srcDir "bin\$Configuration\net48\FM26AccessibilityPlugin.dll"
+        $builtDll = Join-Path $srcDir "bin\$Configuration\net6.0\FM26AccessibilityPlugin.dll"
         
         if (Test-Path $builtDll) {
             Write-Host ""
@@ -229,41 +294,41 @@ function Build-Plugin {
 
 # Main execution
 try {
-    # Create lib directory if it doesn't exist
+    # Create lib directories if they don't exist
     if (-not (Test-Path $libDir)) {
         New-Item -ItemType Directory -Path $libDir | Out-Null
     }
-    
-    # Check if we need to download dependencies
-    $bepInExExists = (Test-Path (Join-Path $libDir "BepInEx.dll"))
-    $unityExists = (Test-Path (Join-Path $libDir "UnityEngine.dll"))
+    if (-not (Test-Path $interopDir)) {
+        New-Item -ItemType Directory -Path $interopDir | Out-Null
+    }
     
     if (-not $SkipDownload) {
-        if (-not $bepInExExists) {
-            if (-not (Get-BepInExLibraries)) {
-                Write-Host ""
-                Write-Host "WARNING: Could not download BepInEx libraries." -ForegroundColor Yellow
-                Write-Host "Build may fail without these libraries." -ForegroundColor Yellow
-            }
-        } else {
-            Write-Host "BepInEx libraries already present." -ForegroundColor Green
-        }
+        # BepInEx 6 packages are obtained via NuGet restore, not manual download
+        Write-Host "BepInEx 6 dependencies will be resolved via NuGet during restore." -ForegroundColor Green
         
-        if (-not $unityExists) {
-            if (-not (Get-UnityLibraries -ProvidedFM26Path $FM26Path)) {
+        # Check for interop assemblies
+        $hasInterop = (Test-Path (Join-Path $interopDir "Il2CppUnityEngine.CoreModule.dll"))
+        
+        if (-not $hasInterop) {
+            if (-not (Find-FM26Installation -ProvidedFM26Path $FM26Path)) {
                 Write-Host ""
-                Write-Host "WARNING: Could not obtain Unity libraries." -ForegroundColor Yellow
-                Write-Host "Build may fail without these libraries." -ForegroundColor Yellow
+                Write-Host "WARNING: IL2CPP interop assemblies not available." -ForegroundColor Yellow
+                Write-Host "Build may fail without these assemblies." -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "To generate them:" -ForegroundColor Cyan
+                Write-Host "  1. Install Cpp2IL: dotnet tool install -g Cpp2IL" -ForegroundColor White
+                Write-Host "  2. Run this script with -FM26Path pointing to your FM26 installation" -ForegroundColor White
+                Write-Host "  3. Or manually place interop DLLs in: $interopDir" -ForegroundColor White
             }
         } else {
-            Write-Host "Unity libraries already present." -ForegroundColor Green
+            Write-Host "IL2CPP interop assemblies already present." -ForegroundColor Green
         }
     }
     
     # Attempt build
     if (-not (Build-Plugin)) {
         Write-Host ""
-        Write-Host "Build failed. Please ensure all dependencies are in the lib folder." -ForegroundColor Red
+        Write-Host "Build failed. Please ensure all dependencies are available." -ForegroundColor Red
         Write-Host "See lib/README.md for required files." -ForegroundColor Yellow
         exit 1
     }
