@@ -409,16 +409,26 @@ function Build-PluginAutomatically {
     }
     
     # Check if .NET SDK is available
+    Write-Host "  [INFO] Checking for .NET SDK..." -ForegroundColor Cyan
     try {
-        $dotnetVersion = & dotnet --version 2>$null
-        if (-not $dotnetVersion) {
-            Write-Host "  [INFO] .NET SDK not found. Cannot build automatically." -ForegroundColor Yellow
-            Write-Host "  [INFO] Install .NET SDK from: https://dotnet.microsoft.com/download" -ForegroundColor Yellow
-            return $false
+        $dotnetVersion = & dotnet --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet command failed"
         }
-        Write-Host "  [VERBOSE] .NET SDK version: $dotnetVersion" -ForegroundColor Gray
+        Write-Host "  [SUCCESS] .NET SDK version: $dotnetVersion" -ForegroundColor Green
     } catch {
-        Write-Host "  [INFO] .NET SDK not found. Cannot build automatically." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  [ERROR] .NET SDK not found or not functional." -ForegroundColor Red
+        Write-Host ""
+        Write-Host "  The .NET SDK is required to build the plugin automatically." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Please install it from:" -ForegroundColor Cyan
+        Write-Host "    https://dotnet.microsoft.com/download" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  After installation:" -ForegroundColor Cyan
+        Write-Host "    1. Restart PowerShell" -ForegroundColor White
+        Write-Host "    2. Run this installer again" -ForegroundColor White
+        Write-Host ""
         return $false
     }
     
