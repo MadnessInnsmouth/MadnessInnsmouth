@@ -118,12 +118,18 @@ jobs:
 
         # Update PluginInfo.cs
         $pluginInfoPath = "src/FM26AccessibilityPlugin/PluginInfo.cs"
-        (Get-Content $pluginInfoPath -Raw) -replace 'PLUGIN_VERSION = "1\.0\.0"', "PLUGIN_VERSION = `"$version`"" | Set-Content $pluginInfoPath -NoNewline
+        $before = Get-Content $pluginInfoPath -Raw
+        $after = $before -replace 'PLUGIN_VERSION = "[^"]+"', "PLUGIN_VERSION = `"$version`""
+        if ($before -eq $after) { Write-Error "Failed to stamp version in PluginInfo.cs"; exit 1 }
+        [System.IO.File]::WriteAllText($pluginInfoPath, $after)
         Write-Host "Updated PluginInfo.cs"
 
         # Update installer script
         $installerPath = "install/Install-FM26Accessibility.ps1"
-        (Get-Content $installerPath -Raw) -replace '\$ModVersion = "1\.0\.0"', "`$ModVersion = `"$version`"" | Set-Content $installerPath -NoNewline
+        $before = Get-Content $installerPath -Raw
+        $after = $before -replace '\$ModVersion = "[^"]+"', "`$ModVersion = `"$version`""
+        if ($before -eq $after) { Write-Error "Failed to stamp version in Install-FM26Accessibility.ps1"; exit 1 }
+        [System.IO.File]::WriteAllText($installerPath, $after)
         Write-Host "Updated Install-FM26Accessibility.ps1"
 
         Write-Host "All source versions stamped to $version"
