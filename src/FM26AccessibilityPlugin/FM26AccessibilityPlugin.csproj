@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <!-- BepInEx 6 IL2CPP framework (from BepInEx NuGet feed) -->
-    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.688" />
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-pre.2" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
   </ItemGroup>
 

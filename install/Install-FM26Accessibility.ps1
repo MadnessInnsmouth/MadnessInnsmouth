@@ -5,7 +5,7 @@ param(
     [string]$FM26Path = "",
     [switch]$Uninstall = $false,
     [switch]$Force = $false,
-    [string]$BepInExVersion = "6.0.0-be.688"
+    [string]$BepInExVersion = "6.0.0-pre.2"
 )
 
 $ErrorActionPreference = "Stop"
