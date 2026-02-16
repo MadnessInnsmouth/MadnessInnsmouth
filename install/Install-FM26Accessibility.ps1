@@ -289,6 +289,11 @@ function Install-NVDAControllerClient {
     $nvdaDllPath = Join-Path $pluginsPath "nvdaControllerClient64.dll"
     Write-Host "  [VERBOSE] Target path: $nvdaDllPath" -ForegroundColor Gray
     
+    # Ensure plugins directory exists
+    if (-not (Test-Path $pluginsPath)) {
+        New-Item -ItemType Directory -Path $pluginsPath -Force | Out-Null
+    }
+    
     # Check if already installed
     if ((Test-Path $nvdaDllPath) -and -not $Force) {
         $dllSize = (Get-Item $nvdaDllPath).Length
@@ -296,26 +301,71 @@ function Install-NVDAControllerClient {
         return $true
     }
     
-    # Get the directory where this script is located
+    # --- Strategy: check local sources first, then download ---
+    
+    # 1. Check bundled lib folder (ships with the release zip)
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $libDir = Join-Path (Split-Path -Parent $scriptDir) "lib"
     $sourceNvdaDll = Join-Path $libDir "nvdaControllerClient64.dll"
-    Write-Host "  [VERBOSE] Looking for local copy at: $sourceNvdaDll" -ForegroundColor Gray
+    Write-Host "  [VERBOSE] Looking for bundled copy at: $sourceNvdaDll" -ForegroundColor Gray
     
-    # Check if DLL exists in lib folder
     if (Test-Path $sourceNvdaDll) {
-        Write-Host "  [VERBOSE] Found local NVDA Controller Client. Copying..." -ForegroundColor Gray
+        Write-Host "  [VERBOSE] Found bundled NVDA Controller Client. Copying..." -ForegroundColor Gray
         Copy-Item -Path $sourceNvdaDll -Destination $nvdaDllPath -Force
+        Write-Host "NVDA Controller Client installed from bundled files!" -ForegroundColor Green
+        return $true
+    }
+    
+    # 2. Check same directory as installer (in case user placed it there)
+    $localNvdaDll = Join-Path $scriptDir "nvdaControllerClient64.dll"
+    Write-Host "  [VERBOSE] Looking for local copy at: $localNvdaDll" -ForegroundColor Gray
+    
+    if (Test-Path $localNvdaDll) {
+        Write-Host "  [VERBOSE] Found local NVDA Controller Client. Copying..." -ForegroundColor Gray
+        Copy-Item -Path $localNvdaDll -Destination $nvdaDllPath -Force
         Write-Host "NVDA Controller Client installed from local files!" -ForegroundColor Green
         return $true
     }
     
-    # If not in lib folder, inform the user
-    Write-Host "  [INFO] NVDA Controller Client DLL not found in lib folder." -ForegroundColor Yellow
-    Write-Host "  [INFO] You can download it manually from: https://www.nvaccess.org/" -ForegroundColor Yellow
-    Write-Host "  [INFO] Place nvdaControllerClient64.dll in: $pluginsPath" -ForegroundColor Yellow
+    # 3. Check if NVDA is installed on the system and copy from there
+    $nvdaPaths = @(
+        "$env:ProgramFiles\NVDA\lib64\nvdaControllerClient64.dll",
+        "${env:ProgramFiles(x86)}\NVDA\lib64\nvdaControllerClient64.dll",
+        "$env:ProgramFiles\NVDA\nvdaControllerClient64.dll",
+        "${env:ProgramFiles(x86)}\NVDA\nvdaControllerClient64.dll"
+    )
+    
+    foreach ($nvdaPath in $nvdaPaths) {
+        Write-Host "  [VERBOSE] Checking system NVDA installation: $nvdaPath" -ForegroundColor Gray
+        if (Test-Path $nvdaPath) {
+            Write-Host "  Found NVDA Controller Client in system NVDA installation!" -ForegroundColor Green
+            Copy-Item -Path $nvdaPath -Destination $nvdaDllPath -Force
+            Write-Host "NVDA Controller Client installed from system NVDA!" -ForegroundColor Green
+            return $true
+        }
+    }
+    
+    # 4. Try to download from the internet
+    Write-Host "  [INFO] NVDA Controller Client not found locally. Attempting download..." -ForegroundColor Yellow
+    $nvdaControllerUrl = "https://github.com/nvaccess/nvda/blob/master/extras/controllerClient/x64/nvdaControllerClient64.dll?raw=true"
+    $tempNvdaDll = Join-Path $env:TEMP "nvdaControllerClient64.dll"
+    
+    $downloadSuccess = Download-File -Url $nvdaControllerUrl -OutputPath $tempNvdaDll -MaxRetries 2
+    if ($downloadSuccess) {
+        Copy-Item -Path $tempNvdaDll -Destination $nvdaDllPath -Force
+        Remove-Item $tempNvdaDll -Force -ErrorAction SilentlyContinue
+        Write-Host "NVDA Controller Client downloaded and installed!" -ForegroundColor Green
+        return $true
+    }
+    
+    # 5. If all methods fail, inform the user but don't fail installation
     Write-Host ""
-    Write-Host "  [INFO] The mod will still work without it using Windows SAPI as a fallback." -ForegroundColor Yellow
+    Write-Host "  [INFO] Could not obtain NVDA Controller Client DLL." -ForegroundColor Yellow
+    Write-Host "  [INFO] The mod will still work using Windows SAPI as a fallback." -ForegroundColor Yellow
+    Write-Host "  [INFO] For enhanced NVDA support, you can:" -ForegroundColor Yellow
+    Write-Host "         1. Install NVDA (https://www.nvaccess.org/download/)" -ForegroundColor White
+    Write-Host "         2. Place nvdaControllerClient64.dll in: $pluginsPath" -ForegroundColor White
+    Write-Host ""
     
     return $true  # Don't fail installation if NVDA client is missing
 }
@@ -470,14 +520,10 @@ function Main {
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     
     if (-not $isAdmin) {
-        Write-Host "WARNING: Not running as administrator. Some operations may fail." -ForegroundColor Yellow
-        Write-Host "  [HINT] Right-click the installer and choose 'Run as Administrator' if you encounter permission errors." -ForegroundColor Yellow
-        $response = Read-Host "Continue anyway? (y/n)"
-        Write-Host "  [VERBOSE] User response: $response" -ForegroundColor Gray
-        if ($response -ne 'y') {
-            Write-Host "  [INFO] User chose to exit." -ForegroundColor Yellow
-            exit 1
-        }
+        Write-Host "NOTE: Not running as administrator." -ForegroundColor Yellow
+        Write-Host "  This is usually fine. The installer will request elevation only if needed." -ForegroundColor Yellow
+        Write-Host "  [HINT] If you encounter permission errors later, right-click the installer and choose 'Run as Administrator'." -ForegroundColor Yellow
+        Write-Host ""
     }
     
     # Find FM26 installation

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using BepInEx;
@@ -7,6 +8,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 namespace FM26AccessibilityPlugin
 {
@@ -97,6 +99,7 @@ namespace FM26AccessibilityPlugin
         private MainMenuNarrator menuNarrator;
         private float updateInterval = 0.1f;
         private float nextUpdate = 0f;
+        private string lastSceneName = "";
 
         public void Initialize(ManualLogSource log)
         {
@@ -117,11 +120,33 @@ namespace FM26AccessibilityPlugin
                 menuNarrator = gameObject.AddComponent<MainMenuNarrator>();
                 menuNarrator.Initialize(logger, screenReader);
 
+                // Listen for scene changes
+                SceneManager.sceneLoaded += OnSceneLoaded;
+
                 logger.LogInfo("Accessibility Manager components initialized!");
             }
             catch (Exception ex)
             {
                 logger.LogError($"Error initializing Accessibility Manager: {ex}");
+            }
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            try
+            {
+                if (scene.name != lastSceneName)
+                {
+                    lastSceneName = scene.name;
+                    logger?.LogInfo($"Scene changed to: {scene.name}");
+                    screenReader?.Speak($"Screen: {scene.name}", true);
+                    // Notify menu narrator to re-scan
+                    menuNarrator?.ResetScan();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"Error handling scene change: {ex}");
             }
         }
 
@@ -142,12 +167,19 @@ namespace FM26AccessibilityPlugin
                 }
             }
         }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
     }
 
     /// <summary>
     /// Detects main menu screens and narrates menu items for screen reader users.
     /// Scans for common FM main-menu labels such as Continue, New Game, Load Game, etc.
-    /// and announces them when a new menu screen is loaded.
+    /// and announces them when a new menu screen is loaded.  Also scans all Selectable
+    /// components as a fallback to ensure FM26 menus are captured even when buttons
+    /// use non-standard labelling.
     /// </summary>
     public class MainMenuNarrator : MonoBehaviour
     {
@@ -162,7 +194,15 @@ namespace FM26AccessibilityPlugin
             "create a club", "fantasy draft",
             "online", "multiplayer",
             "editor", "extras", "credits",
-            "exit", "quit"
+            "exit", "quit",
+            // FM26-specific labels
+            "career", "versus", "training",
+            "challenges", "play", "manage",
+            "fm touch", "fm classic",
+            "steam workshop", "community",
+            "tutorials", "help", "about",
+            "back", "cancel", "ok", "confirm",
+            "save", "save game", "save & exit"
         };
 
         private int lastButtonHash = 0;
@@ -175,6 +215,16 @@ namespace FM26AccessibilityPlugin
             logger = log;
             screenReader = reader;
             logger.LogInfo("MainMenuNarrator initialized. Will scan for main menu screens.");
+        }
+
+        /// <summary>
+        /// Resets the scan so the next Update cycle will re-announce the current menu.
+        /// Called when a scene change is detected or UI significantly changes.
+        /// </summary>
+        public void ResetScan()
+        {
+            lastButtonHash = 0;
+            hasAnnounced = false;
         }
 
         private void Update()
@@ -195,27 +245,58 @@ namespace FM26AccessibilityPlugin
 
         private void ScanForMainMenu()
         {
-            // Gather all active buttons in the scene
-            var buttons = FindObjectsOfType<Button>();
-            if (buttons == null || buttons.Length == 0)
+            // Gather all active Selectables (buttons, toggles, dropdowns, sliders, etc.)
+            var allSelectables = FindObjectsOfType<Selectable>();
+            if (allSelectables == null || allSelectables.Length == 0)
                 return;
 
             // Collect menu item labels that match known main-menu entries
-            var menuItems = new System.Collections.Generic.List<string>();
-            var menuButtons = new System.Collections.Generic.List<Button>();
-            foreach (var btn in buttons)
+            var menuItems = new List<string>();
+            var menuSelectables = new List<Selectable>();
+
+            foreach (var sel in allSelectables)
             {
-                if (IsMainMenuButton(btn, out string label))
+                if (sel == null || !sel.gameObject.activeInHierarchy || !sel.interactable)
+                    continue;
+
+                string label = GetSelectableLabel(sel);
+                if (string.IsNullOrEmpty(label))
+                    continue;
+
+                string lower = label.ToLowerInvariant();
+                foreach (string known in MainMenuLabels)
                 {
-                    menuItems.Add(label);
-                    menuButtons.Add(btn);
+                    if (lower.Contains(known))
+                    {
+                        menuItems.Add(label);
+                        menuSelectables.Add(sel);
+                        break;
+                    }
+                }
+            }
+
+            // Fall back to announcing ALL selectables if none matched known labels
+            // but there are interactive elements on screen (ensures FM26 menus are read)
+            if (menuItems.Count == 0 && allSelectables.Length > 0)
+            {
+                foreach (var sel in allSelectables)
+                {
+                    if (sel == null || !sel.gameObject.activeInHierarchy || !sel.interactable)
+                        continue;
+
+                    string label = GetSelectableLabel(sel);
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        menuItems.Add(label);
+                        menuSelectables.Add(sel);
+                    }
                 }
             }
 
             if (menuItems.Count == 0)
                 return;
 
-            // Compute hash only from matched menu buttons to avoid false re-announcements
+            // Compute hash from matched items to avoid false re-announcements
             int hash = menuItems.Count;
             foreach (string item in menuItems)
                 hash = hash * 31 + item.GetHashCode();
@@ -224,72 +305,55 @@ namespace FM26AccessibilityPlugin
             {
                 lastButtonHash = hash;
                 hasAnnounced = false;
-                logger?.LogInfo("MainMenuNarrator: detected main-menu button changes, re-scanning...");
+                logger?.LogInfo("MainMenuNarrator: detected menu changes, re-scanning...");
             }
 
             if (hasAnnounced)
                 return;
 
             // Build announcement
-            string announcement = $"Main Menu. {menuItems.Count} items: " + string.Join(", ", menuItems.ToArray());
+            string announcement = $"Menu. {menuItems.Count} items: " + string.Join(", ", menuItems.ToArray());
             logger?.LogInfo($"MainMenuNarrator announcing: {announcement}");
             screenReader?.Speak(announcement, true);
             hasAnnounced = true;
 
-            // Focus the first selectable menu button so keyboard navigation works immediately
-            if (menuButtons.Count > 0)
+            // Focus the first selectable menu item so keyboard navigation works immediately
+            if (menuSelectables.Count > 0)
             {
                 var es = EventSystem.current;
                 if (es != null)
                 {
-                    es.SetSelectedGameObject(menuButtons[0].gameObject);
-                    logger?.LogInfo($"MainMenuNarrator: focused first menu button '{menuItems[0]}'");
+                    es.SetSelectedGameObject(menuSelectables[0].gameObject);
+                    logger?.LogInfo($"MainMenuNarrator: focused first menu item '{menuItems[0]}'");
                 }
             }
         }
 
-        private bool IsMainMenuButton(Button btn, out string matchedLabel)
+        private string GetSelectableLabel(Selectable sel)
         {
-            matchedLabel = null;
-            if (btn == null)
-                return false;
-
-            string label = GetButtonLabel(btn);
-            if (string.IsNullOrEmpty(label))
-                return false;
-
-            string lower = label.ToLowerInvariant();
-            foreach (string known in MainMenuLabels)
-            {
-                if (lower.Contains(known))
-                {
-                    matchedLabel = label;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private string GetButtonLabel(Button btn)
-        {
-            if (btn == null)
+            if (sel == null)
                 return null;
 
             // Try child Text component
-            var text = btn.GetComponentInChildren<Text>();
+            var text = sel.GetComponentInChildren<Text>();
             if (text != null && !string.IsNullOrEmpty(text.text))
                 return text.text.Trim();
 
-            // Try TextMeshPro
+            // Try TextMeshPro (FM26 likely uses TMP for all UI text)
             try
             {
-                var tmp = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                var tmp = sel.GetComponentInChildren<TMPro.TextMeshProUGUI>();
                 if (tmp != null && !string.IsNullOrEmpty(tmp.text))
                     return tmp.text.Trim();
             }
             catch { }
 
-            return btn.gameObject.name;
+            // Fall back to the GameObject name
+            string objName = sel.gameObject.name;
+            if (!string.IsNullOrEmpty(objName))
+                return objName;
+
+            return null;
         }
     }
 
@@ -347,7 +411,9 @@ namespace FM26AccessibilityPlugin
     }
 
     /// <summary>
-    /// Handles communication with Windows screen readers (NVDA, JAWS, Narrator)
+    /// Handles communication with Windows screen readers (NVDA, JAWS, Narrator).
+    /// Periodically re-checks NVDA availability so the plugin adapts when a screen reader
+    /// is started after the game is already running.
     /// </summary>
     public class ScreenReaderInterface : MonoBehaviour
     {
@@ -356,6 +422,8 @@ namespace FM26AccessibilityPlugin
         private bool isNVDAAvailable = false;
         private bool isSAPIAvailable = false;
         private object sapiSynthesizer = null;
+        private float nextScreenReaderCheck = 0f;
+        private const float ScreenReaderCheckInterval = 10f;
 
         public void Initialize(ManualLogSource log)
         {
@@ -381,6 +449,33 @@ namespace FM26AccessibilityPlugin
             catch (Exception ex)
             {
                 logger.LogError($"Error initializing Screen Reader Interface: {ex}");
+            }
+        }
+
+        private void Update()
+        {
+            // Periodically re-check screen reader availability
+            if (Time.time >= nextScreenReaderCheck)
+            {
+                nextScreenReaderCheck = Time.time + ScreenReaderCheckInterval;
+                try
+                {
+                    bool wasAvailable = isNVDAAvailable;
+                    isNVDAAvailable = CheckNVDAAvailability();
+                    if (!wasAvailable && isNVDAAvailable)
+                    {
+                        logger?.LogInfo("NVDA is now available! Switching to NVDA output.");
+                    }
+                    if (!isNVDAAvailable && !isSAPIAvailable)
+                    {
+                        isSAPIAvailable = InitializeSAPI();
+                    }
+                    isScreenReaderActive = isNVDAAvailable || CheckScreenReaderActive();
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning($"Error during screen reader re-check: {ex.Message}");
+                }
             }
         }
 
@@ -564,7 +659,8 @@ namespace FM26AccessibilityPlugin
     }
 
     /// <summary>
-    /// Tracks UI elements and makes them accessible
+    /// Tracks UI elements and makes them accessible.
+    /// Supports Buttons, Toggles, InputFields, Dropdowns, Sliders, and ScrollRects.
     /// </summary>
     public class UIAccessibilityTracker : MonoBehaviour
     {
@@ -641,65 +737,45 @@ namespace FM26AccessibilityPlugin
 
             try
             {
-                // Try to get text from various UI components
-                var text = obj.GetComponent<Text>();
-                if (text != null && !string.IsNullOrEmpty(text.text))
-                {
-                    return FormatAccessibleText(text.text, obj);
-                }
-
-                // Try TextMeshPro (may not be available in all Unity versions)
-                try
-                {
-                    var tmpText = obj.GetComponent<TMPro.TextMeshProUGUI>();
-                    if (tmpText != null && !string.IsNullOrEmpty(tmpText.text))
-                    {
-                        return FormatAccessibleText(tmpText.text, obj);
-                    }
-                }
-                catch
-                {
-                    // TextMeshPro not available, skip
-                }
-
-                // Check for button
+                // Check for button first (most common in menus)
                 var button = obj.GetComponent<Button>();
                 if (button != null)
                 {
-                    // Try to find text in children
-                    var childText = obj.GetComponentInChildren<Text>();
-                    if (childText != null)
-                    {
-                        return $"Button: {childText.text}";
-                    }
-                    
-                    try
-                    {
-                        var childTMP = obj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-                        if (childTMP != null)
-                        {
-                            return $"Button: {childTMP.text}";
-                        }
-                    }
-                    catch
-                    {
-                        // TextMeshPro not available
-                    }
-                    
-                    return $"Button: {obj.name}";
+                    string btnLabel = GetChildText(obj);
+                    return $"Button: {(!string.IsNullOrEmpty(btnLabel) ? btnLabel : obj.name)}";
                 }
 
-                // Check for toggle
+                // Check for toggle / checkbox
                 var toggle = obj.GetComponent<Toggle>();
                 if (toggle != null)
                 {
                     string state = toggle.isOn ? "checked" : "unchecked";
-                    var label = obj.GetComponentInChildren<Text>();
-                    if (label != null)
-                    {
-                        return $"Checkbox {state}: {label.text}";
-                    }
-                    return $"Checkbox {state}: {obj.name}";
+                    string toggleLabel = GetChildText(obj);
+                    return $"Checkbox {state}: {(!string.IsNullOrEmpty(toggleLabel) ? toggleLabel : obj.name)}";
+                }
+
+                // Check for dropdown
+                var dropdown = obj.GetComponent<Dropdown>();
+                if (dropdown != null)
+                {
+                    string dropLabel = GetChildText(obj);
+                    string selectedOption = (dropdown.options != null && dropdown.value >= 0 && dropdown.value < dropdown.options.Count)
+                        ? dropdown.options[dropdown.value].text
+                        : "";
+                    string label = !string.IsNullOrEmpty(dropLabel) ? dropLabel : obj.name;
+                    if (!string.IsNullOrEmpty(selectedOption))
+                        return $"Dropdown: {label}. Selected: {selectedOption}";
+                    return $"Dropdown: {label}";
+                }
+
+                // Check for slider
+                var slider = obj.GetComponent<Slider>();
+                if (slider != null)
+                {
+                    string sliderLabel = GetChildText(obj);
+                    string label = !string.IsNullOrEmpty(sliderLabel) ? sliderLabel : obj.name;
+                    int percent = Mathf.RoundToInt(((slider.value - slider.minValue) / (slider.maxValue - slider.minValue)) * 100f);
+                    return $"Slider: {label}. Value: {percent} percent";
                 }
 
                 // Check for input field
@@ -720,6 +796,26 @@ namespace FM26AccessibilityPlugin
                     return $"Input field: {label}. Current value: {inputField.text}";
                 }
 
+                // Check for scrollrect (scroll view containers)
+                var scrollRect = obj.GetComponent<ScrollRect>();
+                if (scrollRect != null)
+                {
+                    return $"Scroll view: {obj.name}";
+                }
+
+                // Generic selectable
+                var selectable = obj.GetComponent<Selectable>();
+                if (selectable != null)
+                {
+                    string selLabel = GetChildText(obj);
+                    return !string.IsNullOrEmpty(selLabel) ? selLabel : obj.name;
+                }
+
+                // Try direct text on the object itself
+                string directText = GetDirectText(obj);
+                if (!string.IsNullOrEmpty(directText))
+                    return directText;
+
                 // Fallback to object name
                 return obj.name;
             }
@@ -730,48 +826,73 @@ namespace FM26AccessibilityPlugin
             }
         }
 
-        private string FormatAccessibleText(string text, GameObject obj)
+        /// <summary>
+        /// Gets text from the object's children (Text or TextMeshProUGUI).
+        /// </summary>
+        private string GetChildText(GameObject obj)
         {
-            var button = obj.GetComponent<Button>();
-            if (button != null)
-            {
-                return $"Button: {text}";
-            }
+            if (obj == null) return null;
 
-            var toggle = obj.GetComponent<Toggle>();
-            if (toggle != null)
-            {
-                string state = toggle.isOn ? "checked" : "unchecked";
-                return $"Checkbox {state}: {text}";
-            }
+            var text = obj.GetComponentInChildren<Text>();
+            if (text != null && !string.IsNullOrEmpty(text.text))
+                return text.text.Trim();
 
-            return text;
+            try
+            {
+                var tmp = obj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                if (tmp != null && !string.IsNullOrEmpty(tmp.text))
+                    return tmp.text.Trim();
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets text directly on the object (not children).
+        /// </summary>
+        private string GetDirectText(GameObject obj)
+        {
+            if (obj == null) return null;
+
+            var text = obj.GetComponent<Text>();
+            if (text != null && !string.IsNullOrEmpty(text.text))
+                return text.text.Trim();
+
+            try
+            {
+                var tmp = obj.GetComponent<TMPro.TextMeshProUGUI>();
+                if (tmp != null && !string.IsNullOrEmpty(tmp.text))
+                    return tmp.text.Trim();
+            }
+            catch { }
+
+            return null;
         }
     }
 
     /// <summary>
-    /// Harmony patches for intercepting Unity UI creation
+    /// Harmony patches for intercepting Unity UI creation.
+    /// Ensures all Selectables are keyboard-navigable and that an EventSystem always exists.
     /// </summary>
     [HarmonyPatch]
     public static class UIPatches
     {
-        // Patch Button.OnEnable to announce when buttons become active
-        [HarmonyPatch(typeof(Button), "OnEnable")]
+        // Patch Selectable.OnEnable to ensure all interactive elements are keyboard-navigable
+        [HarmonyPatch(typeof(Selectable), "OnEnable")]
         [HarmonyPostfix]
-        public static void Button_OnEnable_Postfix(Button __instance)
+        public static void Selectable_OnEnable_Postfix(Selectable __instance)
         {
             try
             {
-                // Make button keyboard navigable
-                var selectable = __instance.GetComponent<Selectable>();
-                if (selectable != null)
+                if (__instance != null && __instance.navigation.mode == Navigation.Mode.None)
                 {
-                    selectable.navigation = new Navigation { mode = Navigation.Mode.Automatic };
+                    __instance.navigation = new Navigation { mode = Navigation.Mode.Automatic };
                 }
             }
             catch (Exception ex)
             {
-                AccessibilityPlugin.LogError($"Error in Button_OnEnable patch: {ex}");
+                AccessibilityPlugin.LogError($"Error in Selectable_OnEnable patch: {ex}");
             }
         }
 

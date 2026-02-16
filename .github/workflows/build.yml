@@ -53,24 +53,35 @@ jobs:
         # For CI, we'll create minimal stub DLLs
         $stubCode = @"
         using System;
+        using System.Collections.Generic;
         namespace UnityEngine {
             public class MonoBehaviour : Component { }
             public class Component : Object { }
-            public class Object { public string name; }
-            public class GameObject : Object { public T GetComponent<T>() where T : Component => default; public T GetComponentInChildren<T>() where T : Component => default; }
+            public class Object { public string name; public static T FindObjectOfType<T>() where T : Object => default; public static T[] FindObjectsOfType<T>() where T : Object => default(T[]); }
+            public class GameObject : Object { public bool activeInHierarchy; public T GetComponent<T>() where T : Component => default; public T GetComponentInChildren<T>() where T : Component => default; public T AddComponent<T>() where T : Component => default; }
             public class Time { public static float time; }
+            public class Mathf { public static int RoundToInt(float f) => 0; }
             namespace UI {
                 public class Button : Selectable { }
                 public class Toggle : Selectable { public bool isOn; }
                 public class Text : Component { public string text; }
-                public class InputField : Selectable { public string text; public Text placeholder; }
-                public class Selectable : Component { public Navigation navigation; }
-                public struct Navigation { public Mode mode; public enum Mode { Automatic } }
+                public class InputField : Selectable { public string text; public Graphic placeholder; }
+                public class Dropdown : Selectable { public int value; public List<OptionData> options; public class OptionData { public string text; } }
+                public class Slider : Selectable { public float value; public float minValue; public float maxValue; }
+                public class ScrollRect : Component { }
+                public class Selectable : Component { public bool interactable; public Navigation navigation; }
+                public class Graphic : Component { }
+                public struct Navigation { public Mode mode; public enum Mode { None, Automatic } }
                 public class Canvas : Component { }
             }
             namespace EventSystems {
-                public class EventSystem : Component { public static EventSystem current; public GameObject currentSelectedGameObject; }
+                public class EventSystem : Component { public static EventSystem current; public GameObject currentSelectedGameObject; public void SetSelectedGameObject(GameObject go) { } }
                 public class StandaloneInputModule : Component { }
+            }
+            namespace SceneManagement {
+                public struct Scene { public string name { get; } }
+                public enum LoadSceneMode { Single, Additive }
+                public class SceneManager { public static event System.Action<Scene, LoadSceneMode> sceneLoaded; }
             }
         }
         namespace TMPro {
