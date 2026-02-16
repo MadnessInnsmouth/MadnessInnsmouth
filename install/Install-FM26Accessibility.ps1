@@ -195,8 +195,8 @@ function Extract-ZipFile {
             foreach ($entry in $zip.Entries) {
                 $targetPath = Join-Path $DestPath $entry.FullName
                 
-                # Handle directory entries (Length = 0 and name ends with /)
-                if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                # Handle directory entries (entries ending with / are directories)
+                if ($entry.FullName.EndsWith('/')) {
                     # Create the directory if it doesn't exist
                     if (-not (Test-Path $targetPath)) {
                         New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
@@ -218,10 +218,8 @@ function Extract-ZipFile {
                     $filesCreated++
                 }
                 
-                # Extract the file
-                if ($entry.Length -gt 0) {
-                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
-                }
+                # Extract the file (works for both empty and non-empty files)
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
             }
             
             Write-Host "  Extraction complete! (Created: $filesCreated, Overwritten: $filesOverwritten)" -ForegroundColor Green
@@ -410,7 +408,7 @@ function Install-NVDAControllerClient {
                     $targetPath = Join-Path $tempDir $entry.FullName
                     
                     # Handle directory entries
-                    if ($entry.Length -eq 0 -and $entry.FullName.EndsWith('/')) {
+                    if ($entry.FullName.EndsWith('/')) {
                         if (-not (Test-Path $targetPath)) {
                             New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
                         }
@@ -428,10 +426,8 @@ function Install-NVDAControllerClient {
                         Remove-Item $targetPath -Force
                     }
                     
-                    # Extract the file
-                    if ($entry.Length -gt 0) {
-                        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
-                    }
+                    # Extract the file (works for both empty and non-empty files)
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
                 }
             } finally {
                 $zip.Dispose()
