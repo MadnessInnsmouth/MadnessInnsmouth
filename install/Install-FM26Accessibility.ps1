@@ -155,7 +155,7 @@ function Download-File {
     return $false
 }
 
-# Function to extract zip file
+# Function to extract zip file with overwrite support
 function Extract-ZipFile {
     param(
         [string]$ZipPath,
@@ -180,22 +180,71 @@ function Extract-ZipFile {
         Write-Host "  [VERBOSE] Zip file size: $([math]::Round($zipSize / 1MB, 2)) MB" -ForegroundColor Gray
         Write-Host "  [VERBOSE] Loading System.IO.Compression.FileSystem assembly..." -ForegroundColor Gray
         
-        # Use .NET for extraction
+        # Use .NET for extraction with overwrite support
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         
-        Write-Host "  [VERBOSE] Extracting archive contents..." -ForegroundColor Gray
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $DestPath)
+        Write-Host "  [VERBOSE] Extracting archive contents (with overwrite)..." -ForegroundColor Gray
         
-        Write-Host "  Extraction complete!" -ForegroundColor Green
-        return $true
+        # Open the zip file for reading
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+        
+        try {
+            $filesOverwritten = 0
+            $filesCreated = 0
+            
+            foreach ($entry in $zip.Entries) {
+                $targetPath = Join-Path $DestPath $entry.FullName
+                
+                # Security: Validate path to prevent ZIP slip attacks
+                $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
+                $fullDestPath = [System.IO.Path]::GetFullPath($DestPath).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+                $fullDestPath = $fullDestPath + [System.IO.Path]::DirectorySeparatorChar
+                if (-not $fullTargetPath.StartsWith($fullDestPath, [StringComparison]::OrdinalIgnoreCase)) {
+                    Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
+                    continue
+                }
+                
+                # Handle directory entries (per ZIP spec, directories end with /)
+                # Check for backslash too for robustness with non-standard ZIPs
+                if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
+                    # Create the directory if it doesn't exist
+                    if (-not (Test-Path $targetPath)) {
+                        New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
+                    }
+                    continue
+                }
+                
+                # For file entries, ensure parent directory exists
+                $targetDir = Split-Path $targetPath -Parent
+                if ($targetDir -and -not (Test-Path $targetDir)) {
+                    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+                }
+                
+                # Remove existing file if present
+                if (Test-Path $targetPath) {
+                    Remove-Item $targetPath -Force
+                    $filesOverwritten++
+                } else {
+                    $filesCreated++
+                }
+                
+                # Extract the file (works for both empty and non-empty files)
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
+            }
+            
+            Write-Host "  Extraction complete! (Created: $filesCreated, Overwritten: $filesOverwritten)" -ForegroundColor Green
+            return $true
+        } finally {
+            $zip.Dispose()
+        }
     } catch {
         Write-Host "  [ERROR] Extraction failed: $($_.Exception.GetType().FullName)" -ForegroundColor Red
         Write-Host "  [ERROR] Message: $($_.Exception.Message)" -ForegroundColor Red
         if ($_.Exception.InnerException) {
             Write-Host "  [ERROR] Inner: $($_.Exception.InnerException.Message)" -ForegroundColor Red
         }
-        Write-Host "  [HINT]  This may happen if the zip file is corrupted, the destination already exists," -ForegroundColor Yellow
-        Write-Host "          or the destination path has permission issues. Try running as Administrator." -ForegroundColor Yellow
+        Write-Host "  [HINT]  This may happen if the zip file is corrupted or the destination path" -ForegroundColor Yellow
+        Write-Host "          has permission issues. Try running as Administrator." -ForegroundColor Yellow
         return $false
     }
 }
@@ -361,7 +410,49 @@ function Install-NVDAControllerClient {
     if ($downloadSuccess) {
         try {
             Add-Type -AssemblyName System.IO.Compression.FileSystem
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($tempZip, $tempDir)
+            
+            # Extract with overwrite support (using same approach as Extract-ZipFile)
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($tempZip)
+            try {
+                foreach ($entry in $zip.Entries) {
+                    $targetPath = Join-Path $tempDir $entry.FullName
+                    
+                    # Security: Validate path to prevent ZIP slip attacks
+                    $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
+                    $fullTempDir = [System.IO.Path]::GetFullPath($tempDir).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+                    $fullTempDir = $fullTempDir + [System.IO.Path]::DirectorySeparatorChar
+                    if (-not $fullTargetPath.StartsWith($fullTempDir, [StringComparison]::OrdinalIgnoreCase)) {
+                        Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
+                        continue
+                    }
+                    
+                    # Handle directory entries (per ZIP spec, directories end with /)
+                    # Check for backslash too for robustness with non-standard ZIPs
+                    if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
+                        if (-not (Test-Path $targetPath)) {
+                            New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
+                        }
+                        continue
+                    }
+                    
+                    # For file entries, ensure parent directory exists
+                    $targetDir = Split-Path $targetPath -Parent
+                    if ($targetDir -and -not (Test-Path $targetDir)) {
+                        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+                    }
+                    
+                    # Remove existing file if present
+                    if (Test-Path $targetPath) {
+                        Remove-Item $targetPath -Force
+                    }
+                    
+                    # Extract the file (works for both empty and non-empty files)
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $targetPath)
+                }
+            } finally {
+                $zip.Dispose()
+            }
+            
             $extractedDll = Join-Path $tempDir "x64\nvdaControllerClient64.dll"
             if (Test-Path $extractedDll) {
                 Copy-Item -Path $extractedDll -Destination $nvdaDllPath -Force
