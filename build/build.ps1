@@ -154,7 +154,7 @@ function Generate-InteropAssemblies {
             $cpp2ilPath = $versionedExes[0].FullName
             Write-Host "  Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
             if ($versionedExes.Count -gt 1) {
-                Write-Host "  Note: Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Yellow
+                Write-Host "  Note: Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Gray
             }
         }
     }
@@ -175,7 +175,7 @@ function Generate-InteropAssemblies {
                 $cpp2ilPath = $downloadedExes[0].FullName
                 Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
                 if ($downloadedExes.Count -gt 1) {
-                    Write-Host "  Note: Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Yellow
+                    Write-Host "  Note: Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Gray
                 }
             }
         }
