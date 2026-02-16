@@ -5,8 +5,8 @@
 **Most users DON'T need to build from source!**
 
 ### You DON'T need to build if:
-- ✅ You just want to use the mod
-- ✅ You downloaded from the Releases page
+- ✅ You want to install and use the mod (not modify it)
+- ✅ A pre-built release is available on the Releases page
 - ✅ You just want to play FM26 with accessibility features
 
 → **Just download the pre-built release and run the installer!**
