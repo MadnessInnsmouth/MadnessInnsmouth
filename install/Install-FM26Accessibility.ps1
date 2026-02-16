@@ -76,32 +76,21 @@ function Find-FM26Installation {
         if ($steamPath) {
             $steamPath = $steamPath.Replace('/', '\')
             $possiblePaths += "$steamPath\steamapps\common\Football Manager 2026"
-            Write-Host "  [VERBOSE] Steam path from registry: $steamPath" -ForegroundColor Gray
-        } else {
-            Write-Host "  [VERBOSE] Steam path not found in registry." -ForegroundColor Gray
         }
     } catch {
-        Write-Host "  [VERBOSE] Could not read Steam registry key: $_" -ForegroundColor Gray
+        # Silent failure - registry key not available
     }
 
     # Check each possible path in order
     foreach ($path in $possiblePaths) {
-        Write-Host "  [VERBOSE] Checking: $path" -ForegroundColor Gray
         if (Test-Path $path) {
             $exePath = Join-Path $path "fm.exe"
-            Write-Host "  [VERBOSE]   Directory exists. Looking for fm.exe..." -ForegroundColor Gray
             if (Test-Path $exePath) {
                 Write-Host "  Found FM26 at: $path" -ForegroundColor Green
                 return $path
-            } else {
-                Write-Host "  [VERBOSE]   fm.exe not found in this directory." -ForegroundColor Gray
             }
-        } else {
-            Write-Host "  [VERBOSE]   Directory does not exist." -ForegroundColor Gray
         }
     }
-    
-    Write-Host "  [VERBOSE] FM26 was not found in any of the $($possiblePaths.Count) checked locations." -ForegroundColor Gray
     return $null
 }
 
@@ -114,7 +103,6 @@ function Download-File {
     )
     
     Write-Host "Downloading from: $Url" -ForegroundColor Yellow
-    Write-Host "  [VERBOSE] Destination: $OutputPath" -ForegroundColor Gray
     
     for ($i = 1; $i -le $MaxRetries; $i++) {
         try {
@@ -122,17 +110,14 @@ function Download-File {
                 Write-Host "  Retry attempt $i of $MaxRetries..." -ForegroundColor Yellow
             }
             
-            Write-Host "  [VERBOSE] Creating WebClient (attempt $i)..." -ForegroundColor Gray
             $webClient = New-Object System.Net.WebClient
             $webClient.Headers.Add("User-Agent", "FM26-Accessibility-Mod-Installer/1.0")
             
-            Write-Host "  [VERBOSE] Starting download..." -ForegroundColor Gray
             $webClient.DownloadFile($Url, $OutputPath)
             
             # Verify file was downloaded and has size > 0
             if ((Test-Path $OutputPath) -and ((Get-Item $OutputPath).Length -gt 0)) {
-                $fileSize = (Get-Item $OutputPath).Length
-                Write-Host "  Download complete! File size: $([math]::Round($fileSize / 1MB, 2)) MB" -ForegroundColor Green
+                Write-Host "  Download complete!" -ForegroundColor Green
                 return $true
             } else {
                 Write-Host "  [ERROR] Downloaded file is empty or missing at $OutputPath" -ForegroundColor Red
@@ -145,7 +130,6 @@ function Download-File {
                 Write-Host "  [ERROR] Inner: $($_.Exception.InnerException.Message)" -ForegroundColor Red
             }
             if ($i -lt $MaxRetries) {
-                Write-Host "  [VERBOSE] Waiting 2 seconds before retry..." -ForegroundColor Gray
                 Start-Sleep -Seconds 2
             }
         }
@@ -177,13 +161,8 @@ function Extract-ZipFile {
             return $false
         }
         
-        Write-Host "  [VERBOSE] Zip file size: $([math]::Round($zipSize / 1MB, 2)) MB" -ForegroundColor Gray
-        Write-Host "  [VERBOSE] Loading System.IO.Compression.FileSystem assembly..." -ForegroundColor Gray
-        
         # Use .NET for extraction with overwrite support
         Add-Type -AssemblyName System.IO.Compression.FileSystem
-        
-        Write-Host "  [VERBOSE] Extracting archive contents (with overwrite)..." -ForegroundColor Gray
         
         # Open the zip file for reading
         $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
@@ -254,7 +233,6 @@ function Install-BepInEx {
     param([string]$GamePath)
     
     $bepInExPath = Join-Path $GamePath "BepInEx"
-    Write-Host "  [VERBOSE] Checking BepInEx at: $bepInExPath" -ForegroundColor Gray
     
     if ((Test-Path $bepInExPath) -and -not $Force) {
         Write-Host "BepInEx directory already exists." -ForegroundColor Green
@@ -262,11 +240,9 @@ function Install-BepInEx {
         # Verify core files exist (BepInEx 6 IL2CPP layout)
         $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.IL2CPP.dll"
         $coreFileFallback = Join-Path $GamePath "BepInEx\core\BepInEx.Unity.IL2CPP.dll"
-        Write-Host "  [VERBOSE] Verifying core file: $coreFile" -ForegroundColor Gray
         if (-not ((Test-Path $coreFile) -or (Test-Path $coreFileFallback))) {
             Write-Host "  [WARNING] BepInEx 6 IL2CPP installation appears incomplete. Reinstalling..." -ForegroundColor Yellow
         } else {
-            Write-Host "  [VERBOSE] BepInEx 6 IL2CPP core found. Skipping reinstall." -ForegroundColor Gray
             return $true
         }
     }
@@ -276,9 +252,7 @@ function Install-BepInEx {
     
     # Create temp directory
     $tempDir = Join-Path $env:TEMP "FM26Mod_Temp"
-    Write-Host "  [VERBOSE] Temp directory: $tempDir" -ForegroundColor Gray
     if (Test-Path $tempDir) {
-        Write-Host "  [VERBOSE] Removing previous temp directory..." -ForegroundColor Gray
         Remove-Item $tempDir -Recurse -Force
     }
     New-Item -ItemType Directory -Path $tempDir | Out-Null
@@ -286,7 +260,6 @@ function Install-BepInEx {
     # Download BepInEx
     $zipPath = Join-Path $tempDir "BepInEx.zip"
     Write-Host "Downloading BepInEx 6 IL2CPP..."
-    Write-Host "  [VERBOSE] Target URL: $BepInExDownloadUrl" -ForegroundColor Gray
     if (-not (Download-File -Url $BepInExDownloadUrl -OutputPath $zipPath)) {
         Write-Host "  [ERROR] Failed to download BepInEx. Check your internet connection and that the URL is reachable." -ForegroundColor Red
         Write-Host "  [HINT]  You can try downloading manually from https://github.com/BepInEx/BepInEx/releases" -ForegroundColor Yellow
@@ -295,7 +268,6 @@ function Install-BepInEx {
     
     # Extract BepInEx
     Write-Host "Installing BepInEx to game directory..."
-    Write-Host "  [VERBOSE] Extracting to: $GamePath" -ForegroundColor Gray
     if (-not (Extract-ZipFile -ZipPath $zipPath -DestPath $GamePath)) {
         Write-Host "  [ERROR] Failed to extract BepInEx." -ForegroundColor Red
         Write-Host "  [HINT]  You may need to run as Administrator, or the destination may already have files." -ForegroundColor Yellow
@@ -304,23 +276,12 @@ function Install-BepInEx {
     
     # Verify installation (BepInEx 6 IL2CPP structure)
     $bepInExCoreDir = Join-Path $GamePath "BepInEx\core"
-    Write-Host "  [VERBOSE] Verifying installation: checking $bepInExCoreDir" -ForegroundColor Gray
     if (-not (Test-Path $bepInExCoreDir)) {
         Write-Host "  [ERROR] BepInEx installation verification failed. Core directory not found." -ForegroundColor Red
-        # List what was actually extracted
-        Write-Host "  [VERBOSE] Contents of BepInEx directory:" -ForegroundColor Gray
-        if (Test-Path $bepInExPath) {
-            Get-ChildItem -Path $bepInExPath -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-                Write-Host "    $($_.FullName)" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "    (directory does not exist)" -ForegroundColor Gray
-        }
         return $false
     }
     
     # Clean up
-    Write-Host "  [VERBOSE] Cleaning up temp directory..." -ForegroundColor Gray
     Remove-Item $tempDir -Recurse -Force
     
     Write-Host "BepInEx 6 IL2CPP installed successfully!" -ForegroundColor Green
@@ -336,7 +297,6 @@ function Install-NVDAControllerClient {
     
     $pluginsPath = Join-Path $GamePath "BepInEx\plugins"
     $nvdaDllPath = Join-Path $pluginsPath "nvdaControllerClient64.dll"
-    Write-Host "  [VERBOSE] Target path: $nvdaDllPath" -ForegroundColor Gray
     
     # Ensure plugins directory exists
     if (-not (Test-Path $pluginsPath)) {
@@ -345,8 +305,7 @@ function Install-NVDAControllerClient {
     
     # Check if already installed
     if ((Test-Path $nvdaDllPath) -and -not $Force) {
-        $dllSize = (Get-Item $nvdaDllPath).Length
-        Write-Host "NVDA Controller Client already installed ($([math]::Round($dllSize / 1KB, 2)) KB). Skipping." -ForegroundColor Green
+        Write-Host "NVDA Controller Client already installed. Skipping." -ForegroundColor Green
         return $true
     }
     
@@ -360,9 +319,7 @@ function Install-NVDAControllerClient {
     )
     foreach ($libDir in $libCandidates) {
         $sourceNvdaDll = Join-Path $libDir "nvdaControllerClient64.dll"
-        Write-Host "  [VERBOSE] Looking for bundled copy at: $sourceNvdaDll" -ForegroundColor Gray
         if (Test-Path $sourceNvdaDll) {
-            Write-Host "  [VERBOSE] Found bundled NVDA Controller Client. Copying..." -ForegroundColor Gray
             Copy-Item -Path $sourceNvdaDll -Destination $nvdaDllPath -Force
             Write-Host "NVDA Controller Client installed from bundled files!" -ForegroundColor Green
             return $true
@@ -371,10 +328,8 @@ function Install-NVDAControllerClient {
     
     # 2. Check same directory as installer (in case user placed it there)
     $localNvdaDll = Join-Path $PSScriptRoot "nvdaControllerClient64.dll"
-    Write-Host "  [VERBOSE] Looking for local copy at: $localNvdaDll" -ForegroundColor Gray
     
     if (Test-Path $localNvdaDll) {
-        Write-Host "  [VERBOSE] Found local NVDA Controller Client. Copying..." -ForegroundColor Gray
         Copy-Item -Path $localNvdaDll -Destination $nvdaDllPath -Force
         Write-Host "NVDA Controller Client installed from local files!" -ForegroundColor Green
         return $true
@@ -389,7 +344,6 @@ function Install-NVDAControllerClient {
     )
     
     foreach ($nvdaPath in $nvdaPaths) {
-        Write-Host "  [VERBOSE] Checking system NVDA installation: $nvdaPath" -ForegroundColor Gray
         if (Test-Path $nvdaPath) {
             Write-Host "  Found NVDA Controller Client in system NVDA installation!" -ForegroundColor Green
             Copy-Item -Path $nvdaPath -Destination $nvdaDllPath -Force
@@ -494,7 +448,6 @@ function Build-PluginAutomatically {
     $buildScript = Join-Path $repoRoot "build\build.ps1"
     
     if (-not (Test-Path $projectFile)) {
-        Write-Host "  [VERBOSE] Project file not found: $projectFile" -ForegroundColor Gray
         Write-Host "  [INFO] Automatic build requires the full repository structure." -ForegroundColor Yellow
         return $false
     }
@@ -585,12 +538,9 @@ function Build-PluginAutomatically {
                 $cpp2ilOutput = & Cpp2IL --version 2>&1
                 if ($LASTEXITCODE -eq 0) {
                     $cpp2ilAvailable = $true
-                    Write-Host "  [VERBOSE] Cpp2IL found: $cpp2ilOutput" -ForegroundColor Gray
-                } else {
-                    Write-Host "  [VERBOSE] Cpp2IL returned non-zero exit code." -ForegroundColor Gray
                 }
             } catch {
-                Write-Host "  [VERBOSE] Cpp2IL not found on PATH: $($_.Exception.Message)" -ForegroundColor Gray
+                # Cpp2IL not available
             }
             
             if ($cpp2ilAvailable) {
@@ -661,10 +611,8 @@ function Install-AccessibilityPlugin {
     Write-Host "Installing FM26 Accessibility Plugin..." -ForegroundColor Cyan
     
     $pluginsPath = Join-Path $GamePath "BepInEx\plugins"
-    Write-Host "  [VERBOSE] Plugins directory: $pluginsPath" -ForegroundColor Gray
     
     if (-not (Test-Path $pluginsPath)) {
-        Write-Host "  [VERBOSE] Creating plugins directory..." -ForegroundColor Gray
         New-Item -ItemType Directory -Path $pluginsPath -Force | Out-Null
     }
     
@@ -676,7 +624,6 @@ function Install-AccessibilityPlugin {
         (Join-Path (Split-Path -Parent $PSScriptRoot) "build\FM26AccessibilityPlugin.dll")
     )
     foreach ($candidate in $pluginCandidates) {
-        Write-Host "  [VERBOSE] Looking for plugin DLL at: $candidate" -ForegroundColor Gray
         if (Test-Path $candidate) {
             $sourcePluginPath = $candidate
             break
@@ -728,19 +675,6 @@ function Install-AccessibilityPlugin {
             Write-Host "         The plugin needs to reference Unity DLLs from FM26's installation," -ForegroundColor White
             Write-Host "         which cannot be legally redistributed in releases." -ForegroundColor White
             Write-Host ""
-            Write-Host "  [VERBOSE] Listing contents of build directory:" -ForegroundColor Gray
-            $buildDir = Join-Path $PSScriptRoot "build"
-            if (-not (Test-Path $buildDir)) {
-                $buildDir = Join-Path (Split-Path -Parent $PSScriptRoot) "build"
-            }
-            if (Test-Path $buildDir) {
-                Get-ChildItem -Path $buildDir -ErrorAction SilentlyContinue | ForEach-Object {
-                    Write-Host "    $($_.Name)  ($($_.Length) bytes)" -ForegroundColor Gray
-                }
-            } else {
-                Write-Host "    (build directory does not exist)" -ForegroundColor Gray
-            }
-            Write-Host ""
             Write-Host "  For more help, see: https://github.com/MadnessInnsmouth/MadnessInnsmouth/blob/main/BUILD.md" -ForegroundColor Cyan
             Write-Host ""
             return $false
@@ -754,12 +688,9 @@ function Install-AccessibilityPlugin {
         return $false
     }
     
-    Write-Host "  [VERBOSE] Plugin size: $([math]::Round($pluginSize / 1KB, 2)) KB" -ForegroundColor Gray
-    
     # Copy plugin
     $destPluginPath = Join-Path $pluginsPath "FM26AccessibilityPlugin.dll"
     try {
-        Write-Host "  [VERBOSE] Copying plugin to: $destPluginPath" -ForegroundColor Gray
         Copy-Item -Path $sourcePluginPath -Destination $destPluginPath -Force
         
         # Verify copy
@@ -768,8 +699,6 @@ function Install-AccessibilityPlugin {
             return $false
         }
         
-        $destSize = (Get-Item $destPluginPath).Length
-        Write-Host "  [VERBOSE] Verified copy: $([math]::Round($destSize / 1KB, 2)) KB at destination." -ForegroundColor Gray
         Write-Host "Accessibility plugin installed!" -ForegroundColor Green
         return $true
     } catch {
@@ -787,9 +716,7 @@ function Create-Configuration {
     Write-Host "Creating configuration files..." -ForegroundColor Cyan
     
     $configPath = Join-Path $GamePath "BepInEx\config"
-    Write-Host "  [VERBOSE] Config directory: $configPath" -ForegroundColor Gray
     if (-not (Test-Path $configPath)) {
-        Write-Host "  [VERBOSE] Creating config directory..." -ForegroundColor Gray
         New-Item -ItemType Directory -Path $configPath -Force | Out-Null
     }
     
@@ -823,7 +750,6 @@ EnableDebugLogging = false
 "@
     
     $configFile = Join-Path $configPath "com.accessibility.fm26.cfg"
-    Write-Host "  [VERBOSE] Writing config to: $configFile" -ForegroundColor Gray
     $pluginConfig | Out-File -FilePath $configFile -Encoding UTF8
     
     Write-Host "Configuration created!" -ForegroundColor Green
@@ -837,7 +763,6 @@ function Uninstall-Mod {
     Write-Host "Uninstalling $ModName..." -ForegroundColor Yellow
     
     $pluginPath = Join-Path $GamePath "BepInEx\plugins\FM26AccessibilityPlugin.dll"
-    Write-Host "  [VERBOSE] Checking for plugin at: $pluginPath" -ForegroundColor Gray
     
     if (Test-Path $pluginPath) {
         Remove-Item $pluginPath -Force
@@ -866,8 +791,6 @@ function Main {
     $fm26Path = $FM26Path
     if ([string]::IsNullOrEmpty($fm26Path)) {
         $fm26Path = Find-FM26Installation
-    } else {
-        Write-Host "  [VERBOSE] Using user-supplied FM26 path: $fm26Path" -ForegroundColor Gray
     }
     
     if ([string]::IsNullOrEmpty($fm26Path)) {
@@ -875,7 +798,6 @@ function Main {
         Write-Host "Could not find Football Manager 2026 installation automatically." -ForegroundColor Red
         Write-Host "Please enter the full path to your FM26 installation directory:" -ForegroundColor Yellow
         $fm26Path = Read-Host "FM26 Path"
-        Write-Host "  [VERBOSE] User entered path: $fm26Path" -ForegroundColor Gray
         
         if (-not (Test-Path $fm26Path)) {
             Write-Host "  [ERROR] The path does not exist: $fm26Path" -ForegroundColor Red
@@ -892,9 +814,6 @@ function Main {
     if (-not (Test-Path $fmExe)) {
         Write-Host "  [WARNING] fm.exe not found in: $fm26Path" -ForegroundColor Yellow
         Write-Host "  [WARNING] This may not be a valid FM26 installation directory." -ForegroundColor Yellow
-    } else {
-        $exeInfo = Get-Item $fmExe
-        Write-Host "  [VERBOSE] fm.exe found: $([math]::Round($exeInfo.Length / 1MB, 2)) MB, last modified $($exeInfo.LastWriteTime)" -ForegroundColor Gray
     }
     
     # Uninstall mode
