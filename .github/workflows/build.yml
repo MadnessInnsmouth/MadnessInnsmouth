@@ -207,6 +207,18 @@ jobs:
         Compress-Archive -Path "release/*" -DestinationPath $packageName
         Write-Host "Created package: $packageName"
       shell: pwsh
+    
+    - name: Check if DLL was built
+      id: check_dll
+      run: |
+        $dllExists = Test-Path "release/FM26AccessibilityPlugin.dll"
+        echo "DLL_EXISTS=$dllExists" >> $env:GITHUB_OUTPUT
+        if ($dllExists) {
+          Write-Host "✅ Plugin DLL found - release is complete"
+        } else {
+          Write-Host "⚠️ Plugin DLL not found - release will be documentation-only"
+        }
+      shell: pwsh
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -217,6 +229,8 @@ jobs:
         body: |
           ## FM26 Accessibility Mod Release ${{ steps.version.outputs.VERSION }}
           
+          ${{ steps.check_dll.outputs.DLL_EXISTS == 'False' && '### ⚠️ IMPORTANT: This is a Source-Only Release\n\nThis release does NOT include the pre-built plugin DLL.\nYou will need to build it yourself following the instructions in BUILD.md.\n\nFor most users, please wait for a full release with the pre-built DLL.\n' || '### ✅ This release includes the pre-built plugin DLL\n\nReady to install and use!\n' }}
+          
           ### Installation
           1. Download `FM26-Accessibility-Mod-${{ steps.version.outputs.VERSION }}.zip` below
           2. Extract to a folder
@@ -224,10 +238,10 @@ jobs:
           4. Follow the on-screen instructions
           
           ### What's Included
-          - FM26 Accessibility Plugin (BepInEx mod)
+          - ${{ steps.check_dll.outputs.DLL_EXISTS == 'True' && 'FM26 Accessibility Plugin DLL (pre-built, ready to use)' || 'Source code and build scripts (requires building)' }}
           - Automatic installer launcher (`Install-FM26Accessibility.bat`)
           - PowerShell installer script
-          - Complete documentation
+          - Complete documentation (README, QUICKSTART, TROUBLESHOOTING, etc.)
           
           ### Requirements
           - Football Manager 2026
@@ -235,10 +249,7 @@ jobs:
           - .NET Framework 4.8 or higher
           - Screen reader (NVDA, JAWS, or Narrator)
           
-          ### Note About Building
-          The plugin DLL requires Football Manager 2026 Unity assemblies to build.
-          The installer script will download BepInEx automatically.
-          For manual building, see BUILD.md.
+          ${{ steps.check_dll.outputs.DLL_EXISTS == 'False' && '### Building from Source\n\nSince this release does not include a pre-built DLL, you will need to:\n1. Install .NET SDK\n2. Run `.\build\build.ps1`\n3. See BUILD.md for complete instructions\n' || '' }}
           
           ### Getting Started
           See QUICKSTART.md in the zip file for a step-by-step guide!
