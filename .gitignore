@@ -31,6 +31,9 @@ packages/
 temp/
 downloads/
 
+# Installer log files
+install/*.log
+
 # NuGet
 *.nuget.props
 *.nuget.targets
