@@ -1,19 +1,22 @@
 # FM26 Accessibility Mod - Library References
 
-This directory should contain reference DLLs needed to build the plugin:
+This directory contains reference DLLs needed to build the plugin.
 
 ## Required Libraries
 
-### From BepInEx (Download from https://github.com/BepInEx/BepInEx/releases)
-- `BepInEx.dll` - Core BepInEx framework
-- `0Harmony.dll` - Harmony patching library
+### BepInEx and Harmony
+BepInEx 6 and HarmonyX are consumed via **NuGet packages** from the BepInEx NuGet feed (configured in `NuGet.config`). No manual DLL downloads are needed for these.
 
-### From Football Manager 2026 Installation
-Located in `<FM26_Install>/fm_Data/Managed/`:
+### IL2CPP Interop Assemblies (lib/interop/)
+Located in `lib/interop/`, these are generated from your FM26 installation using **Cpp2IL**:
+- `Assembly-CSharp.dll`
 - `UnityEngine.dll`
 - `UnityEngine.UI.dll`
 - `UnityEngine.CoreModule.dll`
 - `UnityEngine.TextRenderingModule.dll`
+- (and other interop assemblies as needed)
+
+These are **not** raw Unity DLLs from `fm_Data/Managed/`. They are IL2CPP interop assemblies generated from `GameAssembly.dll` and `fm_Data/il2cpp_data/Metadata/global-metadata.dat` using Cpp2IL.
 
 ### NVDA Controller Client (Optional for Enhanced NVDA Support)
 - `nvdaControllerClient64.dll` - NVDA Controller Client for direct NVDA communication
@@ -39,8 +42,8 @@ The mod will still work! If not available, the plugin falls back to Windows SAPI
 ## Setup Instructions
 
 1. Install Football Manager 2026
-2. Install BepInEx to your FM26 directory
-3. Run the build script which will automatically copy these files here
+2. Install BepInEx 6 (IL2CPP) to your FM26 directory
+3. Run the build script which will use Cpp2IL to generate interop assemblies into `lib/interop/`
 4. Optionally add nvdaControllerClient64.dll for enhanced NVDA integration
 
 ## GitHub Actions
@@ -49,4 +52,4 @@ For CI/CD, these libraries are downloaded automatically during the build process
 
 ## Note
 
-These DLLs are not included in the repository due to licensing. You must obtain them from the original sources.
+Interop assemblies and the NVDA Controller Client DLL are not included in the repository due to licensing. You must generate the interop assemblies from your own FM26 installation using Cpp2IL.

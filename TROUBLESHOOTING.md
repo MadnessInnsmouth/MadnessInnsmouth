@@ -88,12 +88,12 @@ Before diving into specific issues, run this quick check:
 
 3. **Manual download**:
    - Visit: https://github.com/BepInEx/BepInEx/releases
-   - Download `BepInEx_win_x64_5.4.23.2.zip`
+   - Download `BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.688.zip`
    - Extract to FM26 directory manually
 
 4. **Specify different version**:
    ```powershell
-   .\Install-FM26Accessibility.ps1 -BepInExVersion "5.4.22"
+   .\Install-FM26Accessibility.ps1 -BepInExVersion "6.0.0-be.688"
    ```
 
 ### Plugin DLL Not Found
@@ -130,9 +130,10 @@ Before diving into specific issues, run this quick check:
    - Look for `BepInEx\LogOutput.log` after launching FM26
    - If file doesn't exist or isn't updated, BepInEx isn't loading
 
-2. **Verify BepInEx setup**:
+2. **Verify BepInEx 6 setup**:
    - Check for `winhttp.dll` in FM26 root directory
    - Check for `doorstop_config.ini` in FM26 root directory
+   - Check for `GameAssembly.dll` in FM26 root directory (required for IL2CPP)
 
 3. **Check logs**:
    - Open `BepInEx\LogOutput.log`
@@ -366,8 +367,10 @@ Before diving into specific issues, run this quick check:
 
 1. **Check full error message** for specifics
 2. **Common causes**:
-   - Missing dependencies (.NET Framework)
+   - Missing dependencies (.NET 6.0 SDK)
    - Corrupted DLL files
+   - Missing interop assemblies (run Cpp2IL to regenerate)
+   - Missing `GameAssembly.dll` in FM26 directory
    - Incompatible FM26 version
 3. **Reinstall mod** with `-Force` flag
 
@@ -391,7 +394,7 @@ Before diving into specific issues, run this quick check:
 
 1. **Update BepInEx**:
    ```powershell
-   .\Install-FM26Accessibility.ps1 -Force -BepInExVersion "5.4.23.2"
+   .\Install-FM26Accessibility.ps1 -Force -BepInExVersion "6.0.0-be.688"
    ```
 
 2. **Check for mod conflicts**:

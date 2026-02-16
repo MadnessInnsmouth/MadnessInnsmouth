@@ -86,9 +86,13 @@ GitHub Actions workflow that:
 ```
 User launches FM26
     ↓
-BepInEx loads and initializes
+BepInEx 6 loads and initializes (IL2CPP)
     ↓
-FM26AccessibilityPlugin.dll is loaded
+Il2CppInterop generates runtime interop layer
+    ↓
+FM26AccessibilityPlugin.dll is loaded (BasePlugin)
+    ↓
+ClassInjector registers MonoBehaviour types
     ↓
 Harmony patches applied to Unity UI classes
     ↓
@@ -99,7 +103,7 @@ Screen reader interface initialized
 UI tracker starts monitoring EventSystem
     ↓
 When UI element gets focus:
-    → Extract accessible name
+    → Extract accessible name (via IL2CPP interop)
     → Format with role
     → Send to screen reader
     → User hears announcement
@@ -107,12 +111,12 @@ When UI element gets focus:
 
 ### Key Technologies
 
-1. **BepInEx 5.x** - Unity game modding framework
-   - Provides plugin loading
-   - DLL injection into game process
+1. **BepInEx 6.x** - Unity game modding framework (IL2CPP)
+   - Provides plugin loading via IL2CPP injection
+   - Uses Il2CppInterop for managed-to-IL2CPP bridging
    - Configuration system
 
-2. **Harmony 2.x** - Runtime method patching
+2. **Harmony 2.x / HarmonyX** - Runtime method patching
    - Patches Unity UI methods
    - Ensures keyboard navigation
    - Guarantees EventSystem existence
@@ -155,7 +159,7 @@ When UI element gets focus:
 ### It's Not Just Theoretical Code
 
 1. **Actual Game Integration**
-   - Uses real BepInEx framework (industry standard for Unity modding)
+   - Uses real BepInEx 6 framework (industry standard for Unity IL2CPP modding)
    - Implements actual Harmony patching (used by thousands of mods)
    - Integrates with real screen reader APIs
    - Will work with actual FM26 installation
@@ -168,8 +172,8 @@ When UI element gets focus:
 
 3. **Complete Build System**
    - Real C# project that compiles
-   - Uses actual .NET Framework
-   - References actual Unity assemblies (when available)
+   - Uses actual .NET 6.0 SDK
+   - References IL2CPP interop assemblies (generated via Cpp2IL)
    - Produces actual DLL output
 
 4. **Professional CI/CD**
