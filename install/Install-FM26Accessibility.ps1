@@ -304,20 +304,24 @@ function Install-NVDAControllerClient {
     # --- Strategy: check local sources first, then download ---
     
     # 1. Check bundled lib folder (ships with the release zip)
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $libDir = Join-Path (Split-Path -Parent $scriptDir) "lib"
-    $sourceNvdaDll = Join-Path $libDir "nvdaControllerClient64.dll"
-    Write-Host "  [VERBOSE] Looking for bundled copy at: $sourceNvdaDll" -ForegroundColor Gray
-    
-    if (Test-Path $sourceNvdaDll) {
-        Write-Host "  [VERBOSE] Found bundled NVDA Controller Client. Copying..." -ForegroundColor Gray
-        Copy-Item -Path $sourceNvdaDll -Destination $nvdaDllPath -Force
-        Write-Host "NVDA Controller Client installed from bundled files!" -ForegroundColor Green
-        return $true
+    #    Try both flat layout (script at root) and repo layout (script in install/)
+    $libCandidates = @(
+        (Join-Path $PSScriptRoot "lib"),
+        (Join-Path (Split-Path -Parent $PSScriptRoot) "lib")
+    )
+    foreach ($libDir in $libCandidates) {
+        $sourceNvdaDll = Join-Path $libDir "nvdaControllerClient64.dll"
+        Write-Host "  [VERBOSE] Looking for bundled copy at: $sourceNvdaDll" -ForegroundColor Gray
+        if (Test-Path $sourceNvdaDll) {
+            Write-Host "  [VERBOSE] Found bundled NVDA Controller Client. Copying..." -ForegroundColor Gray
+            Copy-Item -Path $sourceNvdaDll -Destination $nvdaDllPath -Force
+            Write-Host "NVDA Controller Client installed from bundled files!" -ForegroundColor Green
+            return $true
+        }
     }
     
     # 2. Check same directory as installer (in case user placed it there)
-    $localNvdaDll = Join-Path $scriptDir "nvdaControllerClient64.dll"
+    $localNvdaDll = Join-Path $PSScriptRoot "nvdaControllerClient64.dll"
     Write-Host "  [VERBOSE] Looking for local copy at: $localNvdaDll" -ForegroundColor Gray
     
     if (Test-Path $localNvdaDll) {
@@ -345,17 +349,32 @@ function Install-NVDAControllerClient {
         }
     }
     
-    # 4. Try to download from the internet
+    # 4. Try to download from the internet (NVDA controllerClient zip)
     Write-Host "  [INFO] NVDA Controller Client not found locally. Attempting download..." -ForegroundColor Yellow
-    $nvdaControllerUrl = "https://github.com/nvaccess/nvda/blob/master/extras/controllerClient/x64/nvdaControllerClient64.dll?raw=true"
-    $tempNvdaDll = Join-Path $env:TEMP "nvdaControllerClient64.dll"
+    $nvdaControllerUrl = "https://download.nvaccess.org/releases/stable/nvda_2025.3.3_controllerClient.zip"
+    $tempDir = Join-Path $env:TEMP "FM26Mod_NVDATemp"
+    if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+    New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+    $tempZip = Join-Path $tempDir "nvda_controllerClient.zip"
     
-    $downloadSuccess = Download-File -Url $nvdaControllerUrl -OutputPath $tempNvdaDll -MaxRetries 2
+    $downloadSuccess = Download-File -Url $nvdaControllerUrl -OutputPath $tempZip -MaxRetries 2
     if ($downloadSuccess) {
-        Copy-Item -Path $tempNvdaDll -Destination $nvdaDllPath -Force
-        Remove-Item $tempNvdaDll -Force -ErrorAction SilentlyContinue
-        Write-Host "NVDA Controller Client downloaded and installed!" -ForegroundColor Green
-        return $true
+        try {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($tempZip, $tempDir)
+            $extractedDll = Join-Path $tempDir "x64\nvdaControllerClient64.dll"
+            if (Test-Path $extractedDll) {
+                Copy-Item -Path $extractedDll -Destination $nvdaDllPath -Force
+                Write-Host "NVDA Controller Client downloaded and installed!" -ForegroundColor Green
+            } else {
+                Write-Host "  [WARNING] Could not find nvdaControllerClient64.dll in downloaded archive." -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Host "  [WARNING] Failed to extract NVDA Controller Client: $($_.Exception.Message)" -ForegroundColor Yellow
+        } finally {
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path $nvdaDllPath) { return $true }
     }
     
     # 5. If all methods fail, inform the user but don't fail installation
@@ -386,13 +405,23 @@ function Install-AccessibilityPlugin {
     }
     
     # Get the directory where this script is located
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $sourcePluginPath = Join-Path (Split-Path -Parent $scriptDir) "build\FM26AccessibilityPlugin.dll"
-    Write-Host "  [VERBOSE] Looking for plugin DLL at: $sourcePluginPath" -ForegroundColor Gray
+    # Try both flat layout (script at root) and repo layout (script in install/)
+    $sourcePluginPath = $null
+    $pluginCandidates = @(
+        (Join-Path $PSScriptRoot "build\FM26AccessibilityPlugin.dll"),
+        (Join-Path (Split-Path -Parent $PSScriptRoot) "build\FM26AccessibilityPlugin.dll")
+    )
+    foreach ($candidate in $pluginCandidates) {
+        Write-Host "  [VERBOSE] Looking for plugin DLL at: $candidate" -ForegroundColor Gray
+        if (Test-Path $candidate) {
+            $sourcePluginPath = $candidate
+            break
+        }
+    }
     
     # Check if plugin DLL exists
-    if (-not (Test-Path $sourcePluginPath)) {
-        Write-Host "  [ERROR] Plugin DLL not found at: $sourcePluginPath" -ForegroundColor Red
+    if (-not $sourcePluginPath) {
+        Write-Host "  [ERROR] Plugin DLL not found in any of the checked locations." -ForegroundColor Red
         Write-Host ""
         Write-Host "  Please build the plugin first using one of these methods:" -ForegroundColor Yellow
         Write-Host "    1. Run: dotnet build (from the repository root)" -ForegroundColor White
@@ -400,7 +429,10 @@ function Install-AccessibilityPlugin {
         Write-Host "    3. Download a pre-built release from GitHub" -ForegroundColor White
         Write-Host ""
         Write-Host "  [VERBOSE] Listing contents of build directory:" -ForegroundColor Gray
-        $buildDir = Join-Path (Split-Path -Parent $scriptDir) "build"
+        $buildDir = Join-Path $PSScriptRoot "build"
+        if (-not (Test-Path $buildDir)) {
+            $buildDir = Join-Path (Split-Path -Parent $PSScriptRoot) "build"
+        }
         if (Test-Path $buildDir) {
             Get-ChildItem -Path $buildDir -ErrorAction SilentlyContinue | ForEach-Object {
                 Write-Host "    $($_.Name)  ($($_.Length) bytes)" -ForegroundColor Gray
