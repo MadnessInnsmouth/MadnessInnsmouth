@@ -200,7 +200,15 @@ function Build-Plugin {
             Write-Host "Build successful!" -ForegroundColor Green
             Write-Host "Output: $builtDll" -ForegroundColor Green
             
-            # Copy to build output
+            # Copy to build directory (for installer to find)
+            $buildDir = Join-Path $rootDir "build"
+            if (-not (Test-Path $buildDir)) {
+                New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+            }
+            Copy-Item -Path $builtDll -Destination $buildDir -Force
+            Write-Host "Copied to: $buildDir\FM26AccessibilityPlugin.dll" -ForegroundColor Green
+            
+            # Copy to custom output path if specified
             if (-not [string]::IsNullOrEmpty($OutputPath)) {
                 Copy-Item -Path $builtDll -Destination $OutputPath -Force
                 Write-Host "Copied to: $OutputPath" -ForegroundColor Green
