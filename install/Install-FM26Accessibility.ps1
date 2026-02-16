@@ -389,6 +389,164 @@ function Install-NVDAControllerClient {
     return $true  # Don't fail installation if NVDA client is missing
 }
 
+# Function to attempt automatic build of the plugin
+function Build-PluginAutomatically {
+    param([string]$GamePath)
+    
+    Write-Host ""
+    Write-Host "  [INFO] Attempting to build the plugin automatically..." -ForegroundColor Cyan
+    Write-Host ""
+    
+    # Check if we're in a repository structure
+    $repoRoot = Split-Path -Parent $PSScriptRoot
+    $projectFile = Join-Path $repoRoot "src\FM26AccessibilityPlugin\FM26AccessibilityPlugin.csproj"
+    $buildScript = Join-Path $repoRoot "build\build.ps1"
+    
+    if (-not (Test-Path $projectFile)) {
+        Write-Host "  [VERBOSE] Project file not found: $projectFile" -ForegroundColor Gray
+        Write-Host "  [INFO] Automatic build requires the full repository structure." -ForegroundColor Yellow
+        return $false
+    }
+    
+    # Check if .NET SDK is available
+    try {
+        $dotnetVersion = & dotnet --version 2>$null
+        if (-not $dotnetVersion) {
+            Write-Host "  [INFO] .NET SDK not found. Cannot build automatically." -ForegroundColor Yellow
+            Write-Host "  [INFO] Install .NET SDK from: https://dotnet.microsoft.com/download" -ForegroundColor Yellow
+            return $false
+        }
+        Write-Host "  [VERBOSE] .NET SDK version: $dotnetVersion" -ForegroundColor Gray
+    } catch {
+        Write-Host "  [INFO] .NET SDK not found. Cannot build automatically." -ForegroundColor Yellow
+        return $false
+    }
+    
+    # Use the build script if available
+    if (Test-Path $buildScript) {
+        Write-Host "  [INFO] Using build script: build.ps1" -ForegroundColor Cyan
+        Write-Host "  [INFO] This will:" -ForegroundColor Cyan
+        Write-Host "         - Download BepInEx libraries" -ForegroundColor White
+        Write-Host "         - Copy Unity assemblies from your FM26 installation" -ForegroundColor White
+        Write-Host "         - Build the accessibility plugin" -ForegroundColor White
+        Write-Host ""
+        
+        try {
+            Push-Location $repoRoot
+            & $buildScript -FM26Path $GamePath
+            $buildResult = $LASTEXITCODE
+            Pop-Location
+            
+            if ($buildResult -eq 0) {
+                Write-Host "  [SUCCESS] Plugin built successfully!" -ForegroundColor Green
+                return $true
+            } else {
+                Write-Host "  [WARNING] Build script completed with errors." -ForegroundColor Yellow
+                # Check if DLL was created anyway
+                $dllPath = Join-Path $repoRoot "build\FM26AccessibilityPlugin.dll"
+                if (Test-Path $dllPath) {
+                    Write-Host "  [INFO] Plugin DLL was created despite errors." -ForegroundColor Green
+                    return $true
+                }
+                return $false
+            }
+        } catch {
+            Write-Host "  [ERROR] Build failed: $_" -ForegroundColor Red
+            Pop-Location
+            return $false
+        }
+    } else {
+        Write-Host "  [INFO] Build script not found. Attempting direct build..." -ForegroundColor Cyan
+        
+        # Create lib directory and download BepInEx if needed
+        $libPath = Join-Path $repoRoot "lib"
+        if (-not (Test-Path $libPath)) {
+            New-Item -ItemType Directory -Path $libPath -Force | Out-Null
+        }
+        
+        $bepinexDll = Join-Path $libPath "BepInEx.dll"
+        if (-not (Test-Path $bepinexDll)) {
+            Write-Host "  [INFO] Downloading BepInEx libraries..." -ForegroundColor Cyan
+            try {
+                $tempDir = Join-Path $env:TEMP "BepInEx_Build_$([guid]::NewGuid())"
+                New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+                
+                $zipPath = Join-Path $tempDir "BepInEx.zip"
+                $bepInExVersion = "5.4.23.2"
+                $bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.zip"
+                
+                Invoke-WebRequest -Uri $bepInExUrl -OutFile $zipPath -UseBasicParsing
+                Expand-Archive -Path $zipPath -DestinationPath $tempDir -Force
+                
+                Copy-Item -Path "$tempDir\BepInEx\core\BepInEx.dll" -Destination $libPath -Force
+                Copy-Item -Path "$tempDir\BepInEx\core\0Harmony.dll" -Destination $libPath -Force
+                
+                Remove-Item -Path $tempDir -Recurse -Force
+                Write-Host "  [SUCCESS] BepInEx libraries downloaded." -ForegroundColor Green
+            } catch {
+                Write-Host "  [ERROR] Failed to download BepInEx: $_" -ForegroundColor Red
+                return $false
+            }
+        }
+        
+        # Copy Unity assemblies from FM26 installation
+        $unityPath = Join-Path $GamePath "fm_Data\Managed"
+        if (Test-Path $unityPath) {
+            Write-Host "  [INFO] Copying Unity assemblies from FM26..." -ForegroundColor Cyan
+            $unityDlls = @(
+                "UnityEngine.dll",
+                "UnityEngine.CoreModule.dll", 
+                "UnityEngine.UI.dll",
+                "UnityEngine.TextRenderingModule.dll"
+            )
+            foreach ($dll in $unityDlls) {
+                $sourceDll = Join-Path $unityPath $dll
+                if (Test-Path $sourceDll) {
+                    Copy-Item -Path $sourceDll -Destination $libPath -Force
+                    Write-Host "  [VERBOSE] Copied: $dll" -ForegroundColor Gray
+                }
+            }
+        } else {
+            Write-Host "  [WARNING] Unity assemblies not found at: $unityPath" -ForegroundColor Yellow
+        }
+        
+        # Build the project
+        Write-Host "  [INFO] Building plugin..." -ForegroundColor Cyan
+        try {
+            Push-Location $repoRoot
+            & dotnet build "$projectFile" --configuration Release 2>&1 | ForEach-Object {
+                if ($_ -match "error") {
+                    Write-Host "  [BUILD ERROR] $_" -ForegroundColor Red
+                } elseif ($_ -match "warning") {
+                    Write-Host "  [BUILD WARN] $_" -ForegroundColor Yellow
+                }
+            }
+            
+            # Check if build succeeded
+            $builtDll = Join-Path $repoRoot "src\FM26AccessibilityPlugin\bin\Release\net48\FM26AccessibilityPlugin.dll"
+            if (Test-Path $builtDll) {
+                # Copy to build directory
+                $buildDir = Join-Path $repoRoot "build"
+                if (-not (Test-Path $buildDir)) {
+                    New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+                }
+                Copy-Item -Path $builtDll -Destination $buildDir -Force
+                Write-Host "  [SUCCESS] Plugin built successfully!" -ForegroundColor Green
+                Pop-Location
+                return $true
+            } else {
+                Write-Host "  [ERROR] Build completed but DLL not found." -ForegroundColor Red
+                Pop-Location
+                return $false
+            }
+        } catch {
+            Write-Host "  [ERROR] Build failed: $_" -ForegroundColor Red
+            Pop-Location
+            return $false
+        }
+    }
+}
+
 # Function to install the accessibility plugin
 function Install-AccessibilityPlugin {
     param([string]$GamePath)
@@ -421,26 +579,66 @@ function Install-AccessibilityPlugin {
     
     # Check if plugin DLL exists
     if (-not $sourcePluginPath) {
-        Write-Host "  [ERROR] Plugin DLL not found in any of the checked locations." -ForegroundColor Red
+        Write-Host "  [WARNING] Plugin DLL not found in package." -ForegroundColor Yellow
         Write-Host ""
-        Write-Host "  Please build the plugin first using one of these methods:" -ForegroundColor Yellow
-        Write-Host "    1. Run: dotnet build (from the repository root)" -ForegroundColor White
-        Write-Host "    2. Run: .\build\build.ps1" -ForegroundColor White
-        Write-Host "    3. Download a pre-built release from GitHub" -ForegroundColor White
+        Write-Host "  [INFO] Pre-built releases do not include the plugin DLL because" -ForegroundColor Cyan
+        Write-Host "         it requires Unity assemblies from Football Manager 2026." -ForegroundColor Cyan
         Write-Host ""
-        Write-Host "  [VERBOSE] Listing contents of build directory:" -ForegroundColor Gray
-        $buildDir = Join-Path $PSScriptRoot "build"
-        if (-not (Test-Path $buildDir)) {
-            $buildDir = Join-Path (Split-Path -Parent $PSScriptRoot) "build"
-        }
-        if (Test-Path $buildDir) {
-            Get-ChildItem -Path $buildDir -ErrorAction SilentlyContinue | ForEach-Object {
-                Write-Host "    $($_.Name)  ($($_.Length) bytes)" -ForegroundColor Gray
+        
+        # Try automatic build
+        Write-Host "  [INFO] Attempting to build the plugin automatically using your FM26 installation..." -ForegroundColor Cyan
+        $buildSuccess = Build-PluginAutomatically -GamePath $GamePath
+        
+        if ($buildSuccess) {
+            # Check again for the DLL after building
+            foreach ($candidate in $pluginCandidates) {
+                if (Test-Path $candidate) {
+                    $sourcePluginPath = $candidate
+                    Write-Host "  [SUCCESS] Plugin built and ready to install!" -ForegroundColor Green
+                    break
+                }
             }
-        } else {
-            Write-Host "    (build directory does not exist)" -ForegroundColor Gray
         }
-        return $false
+        
+        # If still no DLL, provide guidance
+        if (-not $sourcePluginPath) {
+            Write-Host ""
+            Write-Host "  [ERROR] Could not build the plugin automatically." -ForegroundColor Red
+            Write-Host ""
+            Write-Host "  To use this mod, you need to build the plugin. Options:" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "  Option 1: Manual Build (Recommended)" -ForegroundColor Cyan
+            Write-Host "    1. Ensure .NET SDK is installed: https://dotnet.microsoft.com/download" -ForegroundColor White
+            Write-Host "    2. Open PowerShell in the mod directory" -ForegroundColor White
+            Write-Host "    3. Run: .\build\build.ps1 -FM26Path ""$GamePath""" -ForegroundColor White
+            Write-Host "    4. Run this installer again" -ForegroundColor White
+            Write-Host ""
+            Write-Host "  Option 2: Use Repository" -ForegroundColor Cyan
+            Write-Host "    1. Clone: https://github.com/MadnessInnsmouth/MadnessInnsmouth" -ForegroundColor White
+            Write-Host "    2. Run: .\build\build.ps1" -ForegroundColor White
+            Write-Host "    3. Run: .\install\Install-FM26Accessibility.ps1" -ForegroundColor White
+            Write-Host ""
+            Write-Host "  [INFO] Why pre-built DLLs aren't available:" -ForegroundColor Cyan
+            Write-Host "         The plugin needs to reference Unity DLLs from FM26's installation," -ForegroundColor White
+            Write-Host "         which cannot be legally redistributed in releases." -ForegroundColor White
+            Write-Host ""
+            Write-Host "  [VERBOSE] Listing contents of build directory:" -ForegroundColor Gray
+            $buildDir = Join-Path $PSScriptRoot "build"
+            if (-not (Test-Path $buildDir)) {
+                $buildDir = Join-Path (Split-Path -Parent $PSScriptRoot) "build"
+            }
+            if (Test-Path $buildDir) {
+                Get-ChildItem -Path $buildDir -ErrorAction SilentlyContinue | ForEach-Object {
+                    Write-Host "    $($_.Name)  ($($_.Length) bytes)" -ForegroundColor Gray
+                }
+            } else {
+                Write-Host "    (build directory does not exist)" -ForegroundColor Gray
+            }
+            Write-Host ""
+            Write-Host "  For more help, see: https://github.com/MadnessInnsmouth/MadnessInnsmouth/blob/main/BUILD.md" -ForegroundColor Cyan
+            Write-Host ""
+            return $false
+        }
     }
     
     # Verify the DLL is valid

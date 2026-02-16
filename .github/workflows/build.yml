@@ -217,30 +217,50 @@ jobs:
         body: |
           ## FM26 Accessibility Mod Release ${{ steps.version.outputs.VERSION }}
           
-          ### Installation
+          ### ⚠️ Important: First-Time Setup
+          
+          **Pre-built plugin DLLs are NOT included** in this release due to Unity licensing restrictions.
+          
+          The installer will **automatically build the plugin** for you using the Unity assemblies from your FM26 installation.
+          
+          **Requirements for automatic build:**
+          - ✅ .NET SDK installed ([Download here](https://dotnet.microsoft.com/download) if needed)
+          - ✅ Football Manager 2026 installed
+          - ✅ Internet connection (to download BepInEx)
+          
+          First-time installation takes a few minutes while the plugin is built.
+          
+          ### Installation Steps
           1. Download `FM26-Accessibility-Mod-${{ steps.version.outputs.VERSION }}.zip` below
           2. Extract to a folder
-          3. **Double-click `Install-FM26Accessibility.bat`** to run the installer
-          4. Follow the on-screen instructions
+          3. **Ensure .NET SDK is installed** (see requirements above)
+          4. **Double-click `Install-FM26Accessibility.bat`** to run the installer
+          5. Follow the on-screen instructions (installer will build and install automatically)
           
           ### What's Included
-          - FM26 Accessibility Plugin (BepInEx mod)
-          - Automatic installer launcher (`Install-FM26Accessibility.bat`)
+          - Automatic installer with build capability
+          - Installer launcher (`Install-FM26Accessibility.bat`)
           - PowerShell installer script
           - Complete documentation
           
           ### Requirements
           - Football Manager 2026
           - Windows 10/11 (64-bit)
-          - .NET Framework 4.8 or higher
+          - **.NET SDK** (for automatic build) - [Download](https://dotnet.microsoft.com/download)
+          - .NET Framework 4.8 or higher (usually pre-installed on Windows)
           - Screen reader (NVDA, JAWS, or Narrator)
           
-          ### Note About Building
-          The plugin DLL requires Football Manager 2026 Unity assemblies to build.
-          The installer script will download BepInEx automatically.
-          For manual building, see BUILD.md.
+          ### Troubleshooting
+          
+          **"Plugin DLL not found" error?**
+          - Install .NET SDK from https://dotnet.microsoft.com/download
+          - Run the installer again
+          
+          **Still having issues?**
+          - See QUICKSTART.md in the zip for detailed troubleshooting
+          - Or manually build: see BUILD.md
           
           ### Getting Started
-          See QUICKSTART.md in the zip file for a step-by-step guide!
+          See QUICKSTART.md in the zip file for a complete step-by-step guide!
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
