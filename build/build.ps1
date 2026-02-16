@@ -47,7 +47,7 @@ $interopDir = Join-Path $libDir "interop"
 $srcDir = Join-Path $rootDir "src\FM26AccessibilityPlugin"
 
 # BepInEx 6 configuration (IL2CPP build)
-$bepInExVersion = "6.0.0-be.688"
+$bepInExVersion = "6.0.0-pre.2"
 $bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx-Unity.IL2CPP-win-x64-$bepInExVersion.zip"
 
 # Function to detect IL2CPP vs Mono build

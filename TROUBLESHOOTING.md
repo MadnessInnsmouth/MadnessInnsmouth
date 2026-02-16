@@ -88,12 +88,12 @@ Before diving into specific issues, run this quick check:
 
 3. **Manual download**:
    - Visit: https://github.com/BepInEx/BepInEx/releases
-   - Download `BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.688.zip`
+   - Download `BepInEx-Unity.IL2CPP-win-x64-6.0.0-pre.2.zip`
    - Extract to FM26 directory manually
 
 4. **Specify different version**:
    ```powershell
-   .\Install-FM26Accessibility.ps1 -BepInExVersion "6.0.0-be.688"
+   .\Install-FM26Accessibility.ps1 -BepInExVersion "6.0.0-pre.2"
    ```
 
 ### Plugin DLL Not Found
@@ -394,7 +394,7 @@ Before diving into specific issues, run this quick check:
 
 1. **Update BepInEx**:
    ```powershell
-   .\Install-FM26Accessibility.ps1 -Force -BepInExVersion "6.0.0-be.688"
+   .\Install-FM26Accessibility.ps1 -Force -BepInExVersion "6.0.0-pre.2"
    ```
 
 2. **Check for mod conflicts**:

@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Plugin Base Class**: Changed from `BaseUnityPlugin` to `BasePlugin` for BepInEx 6 IL2CPP compatibility
 - **Interop Assemblies**: Unity DLLs from `fm_Data/Managed/` replaced with IL2CPP interop assemblies in `lib/interop/`
 - **Build Output Path**: Changed from `bin/Release/net48/` to `bin/Release/net6.0/`
-- **BepInEx Download**: Updated from `BepInEx_win_x64_5.4.23.2.zip` to `BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.688.zip`
+- **BepInEx Download**: Updated from `BepInEx_win_x64_5.4.23.2.zip` to `BepInEx-Unity.IL2CPP-win-x64-6.0.0-pre.2.zip`
 - **Dependency Management**: Replaced local `BepInEx.dll`/`0Harmony.dll` references with NuGet packages
 
 ### Removed
