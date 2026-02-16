@@ -533,26 +533,69 @@ function Build-PluginAutomatically {
             Write-Host "  [INFO] IL2CPP build detected. Interop assemblies needed." -ForegroundColor Cyan
             Write-Host "  [INFO] Checking for Cpp2IL..." -ForegroundColor Cyan
             
-            $cpp2ilAvailable = $false
-            try {
-                $cpp2ilOutput = & Cpp2IL --version 2>&1
-                if ($LASTEXITCODE -eq 0) {
-                    $cpp2ilAvailable = $true
-                }
-            } catch {
-                # Cpp2IL not available - will fall back to manual interop assembly installation
+            # Check for Cpp2IL in multiple locations
+            $cpp2ilPath = $null
+            
+            # 1. Check for standalone executable in script directory (most portable)
+            $scriptDirExe = Join-Path $PSScriptRoot "Cpp2IL.exe"
+            if (Test-Path $scriptDirExe) {
+                $cpp2ilPath = $scriptDirExe
+                Write-Host "  [INFO] Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
             }
             
-            if ($cpp2ilAvailable) {
-                Write-Host "  [INFO] Generating interop assemblies with Cpp2IL..." -ForegroundColor Cyan
+            # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
+            if (-not $cpp2ilPath) {
+                $versionedExe = Get-ChildItem -Path $PSScriptRoot -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($versionedExe) {
+                    $cpp2ilPath = $versionedExe.FullName
+                    Write-Host "  [INFO] Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+                }
+            }
+            
+            # 3. Check for standalone executable in common download locations
+            if (-not $cpp2ilPath) {
+                $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
+                if (Test-Path $downloadsDir) {
+                    $downloadedExe = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($downloadedExe) {
+                        $cpp2ilPath = $downloadedExe.FullName
+                        Write-Host "  [INFO] Found Cpp2IL in Downloads: $cpp2ilPath" -ForegroundColor Gray
+                    }
+                }
+            }
+            
+            # 4. Check if it's available as a command (global dotnet tool or in PATH)
+            if (-not $cpp2ilPath) {
                 try {
-                    & Cpp2IL --game-path $GamePath --output-as "dummydll" --output-to $interopPath
-                    Write-Host "  [SUCCESS] Interop assemblies generated." -ForegroundColor Green
+                    $cpp2ilOutput = & Cpp2IL --version 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+                        $cpp2ilPath = "Cpp2IL"
+                        Write-Host "  [INFO] Found Cpp2IL in PATH (global dotnet tool)" -ForegroundColor Gray
+                    }
+                } catch {
+                    # Cpp2IL not available in PATH
+                }
+            }
+            
+            if ($cpp2ilPath) {
+                Write-Host "  [INFO] Generating interop assemblies with Cpp2IL..." -ForegroundColor Cyan
+                Write-Host "  [INFO] Command: & `"$cpp2ilPath`" --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopPath`"" -ForegroundColor Gray
+                try {
+                    # Use the call operator & to execute the Cpp2IL path
+                    & $cpp2ilPath --game-path $GamePath --output-as "dummydll" --output-to $interopPath
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host "  [SUCCESS] Interop assemblies generated." -ForegroundColor Green
+                    } else {
+                        Write-Host "  [WARNING] Cpp2IL exited with code: $LASTEXITCODE" -ForegroundColor Yellow
+                    }
                 } catch {
                     Write-Host "  [WARNING] Cpp2IL failed: $_" -ForegroundColor Yellow
                 }
             } else {
-                Write-Host "  [WARNING] Cpp2IL not found. Install with: dotnet tool install -g Cpp2IL" -ForegroundColor Yellow
+                Write-Host "  [WARNING] Cpp2IL not found." -ForegroundColor Yellow
+                Write-Host "  [INFO] You can install Cpp2IL by:" -ForegroundColor Cyan
+                Write-Host "    - Option 1: Run 'dotnet tool install -g Cpp2IL' and restart PowerShell" -ForegroundColor White
+                Write-Host "    - Option 2: Download Cpp2IL.exe and place it in: $PSScriptRoot" -ForegroundColor White
                 Write-Host "  [WARNING] Interop assemblies must be provided manually in lib/interop/" -ForegroundColor Yellow
             }
         } else {
