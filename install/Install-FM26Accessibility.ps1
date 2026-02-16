@@ -195,6 +195,14 @@ function Extract-ZipFile {
             foreach ($entry in $zip.Entries) {
                 $targetPath = Join-Path $DestPath $entry.FullName
                 
+                # Security: Validate path to prevent ZIP slip attacks
+                $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
+                $fullDestPath = [System.IO.Path]::GetFullPath($DestPath)
+                if (-not $fullTargetPath.StartsWith($fullDestPath)) {
+                    Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
+                    continue
+                }
+                
                 # Handle directory entries (per ZIP spec, directories end with /)
                 # Check for backslash too for robustness with non-standard ZIPs
                 if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
@@ -407,6 +415,14 @@ function Install-NVDAControllerClient {
             try {
                 foreach ($entry in $zip.Entries) {
                     $targetPath = Join-Path $tempDir $entry.FullName
+                    
+                    # Security: Validate path to prevent ZIP slip attacks
+                    $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
+                    $fullTempDir = [System.IO.Path]::GetFullPath($tempDir)
+                    if (-not $fullTargetPath.StartsWith($fullTempDir)) {
+                        Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
+                        continue
+                    }
                     
                     # Handle directory entries (per ZIP spec, directories end with /)
                     # Check for backslash too for robustness with non-standard ZIPs
