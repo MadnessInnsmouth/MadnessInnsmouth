@@ -464,7 +464,7 @@ namespace FM26AccessibilityPlugin
                     isNVDAAvailable = CheckNVDAAvailability();
                     if (!wasAvailable && isNVDAAvailable)
                     {
-                        logger?.LogInfo("NVDA is now available! Switching to NVDA output.");
+                        logger?.LogInfo("NVDA is now available! Speech output will use NVDA on next call.");
                     }
                     if (!isNVDAAvailable && !isSAPIAvailable)
                     {
@@ -774,7 +774,10 @@ namespace FM26AccessibilityPlugin
                 {
                     string sliderLabel = GetChildText(obj);
                     string label = !string.IsNullOrEmpty(sliderLabel) ? sliderLabel : obj.name;
-                    int percent = Mathf.RoundToInt(((slider.value - slider.minValue) / (slider.maxValue - slider.minValue)) * 100f);
+                    int percent = 0;
+                    float range = slider.maxValue - slider.minValue;
+                    if (range > 0f)
+                        percent = Mathf.RoundToInt(((slider.value - slider.minValue) / range) * 100f);
                     return $"Slider: {label}. Value: {percent} percent";
                 }
 
