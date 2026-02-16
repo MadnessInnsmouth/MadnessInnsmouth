@@ -69,7 +69,7 @@ This script will:
 3. **Auto-install Cpp2IL if not already present**
 4. Run Cpp2IL to generate interop assemblies from your FM26 installation
 5. Build the plugin
-5. Create a release package
+6. Create a release package
 
 ## After Building
 
