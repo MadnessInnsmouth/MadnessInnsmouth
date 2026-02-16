@@ -22,7 +22,7 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 
 - ✅ **Football Manager 2026** (Steam, Xbox Game Pass, or Epic Games version)
 - ✅ **Windows 10/11** (64-bit)
-- ✅ **.NET Framework 4.8** or higher (usually already installed)
+- ✅ **.NET 6.0 SDK** or higher (download from https://dotnet.microsoft.com/download)
 - ✅ **Screen Reader** - Choose one:
   - [NVDA](https://www.nvaccess.org/download/) (Free, recommended)
   - [JAWS](https://www.freedomscientific.com/products/software/jaws/)
@@ -125,12 +125,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 This mod uses:
 
-- **[BepInEx](https://github.com/BepInEx/BepInEx)** - Unity game modding framework for code injection
+- **[BepInEx 6](https://github.com/BepInEx/BepInEx)** - Unity game modding framework for IL2CPP games
+- **[Il2CppInterop](https://github.com/BepInEx/Il2CppInterop)** - Interop layer for IL2CPP Unity games
 - **[HarmonyX](https://github.com/BepInEx/HarmonyX)** - Runtime method patching to intercept UI creation
 - **Windows SAPI** - Native speech synthesis for screen reader output
 - **Unity EventSystem** - Tracks UI focus and navigation
 
-The mod intercepts Football Manager's UI creation and adds accessibility metadata to all UI elements, making them readable by screen readers.
+The mod intercepts Football Manager's UI creation via IL2CPP interop and adds accessibility metadata to all UI elements, making them readable by screen readers.
 
 See [TECHNICAL.md](TECHNICAL.md) for detailed architecture information.
 

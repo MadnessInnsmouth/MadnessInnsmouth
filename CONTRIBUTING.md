@@ -46,7 +46,7 @@ Help test the mod:
 
 - Git
 - Visual Studio 2019+ or Visual Studio Code with C# extension
-- .NET Framework 4.8 SDK
+- .NET 6.0 SDK
 - Football Manager 2026 (for testing)
 - A screen reader (NVDA recommended for testing)
 
@@ -84,7 +84,7 @@ dotnet build src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj --config
 1. **Build the plugin**
 2. **Copy to FM26**: 
    ```powershell
-   Copy-Item "src/FM26AccessibilityPlugin/bin/Release/net48/FM26AccessibilityPlugin.dll" `
+   Copy-Item "src/FM26AccessibilityPlugin/bin/Release/net6.0/FM26AccessibilityPlugin.dll" `
              "C:\Path\To\FM26\BepInEx\plugins\" -Force
    ```
 3. **Launch FM26** and test

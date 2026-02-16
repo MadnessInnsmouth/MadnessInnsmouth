@@ -22,7 +22,7 @@ Before you start, make sure you have:
 3. Extract the ZIP file to a folder (e.g., `C:\FM26Mod\`)
 
 **Important Note:** Due to Unity licensing restrictions, pre-built plugin DLLs are not included in releases. The installer will automatically build the plugin for you using the Unity assemblies from your FM26 installation. This requires:
-- **.NET SDK** installed (download from https://dotnet.microsoft.com/download)
+- **.NET 6.0 SDK** installed (download from https://dotnet.microsoft.com/download)
 - Internet connection (to download BepInEx)
 
 ### Step 2: Run the Installer
@@ -33,7 +33,7 @@ Before you start, make sure you have:
 4. Follow the on-screen instructions
 5. The installer will:
    - Find your FM26 installation automatically
-   - Download BepInEx (the modding framework)
+   - Download BepInEx 6 (the modding framework for IL2CPP)
    - **Build the accessibility plugin** (if not already built)
    - Install the accessibility plugin
    - Configure everything for you
@@ -75,7 +75,7 @@ This happens when the installer cannot automatically build the plugin. Solutions
 
 1. **Install .NET SDK** (if not already installed):
    - Download from: https://dotnet.microsoft.com/download
-   - Install the latest .NET SDK (8.0 or higher recommended)
+   - Install the latest .NET 6.0 SDK (or higher)
    - Restart your PowerShell/Command Prompt
    - Run the installer again
 
@@ -95,7 +95,7 @@ This happens when the installer cannot automatically build the plugin. Solutions
    .\install\Install-FM26Accessibility.ps1
    ```
 
-**Why this happens:** The plugin needs to reference Unity DLLs from your FM26 installation. These cannot be legally redistributed in pre-built releases, so the plugin must be built locally using your game's files.
+**Why this happens:** The plugin needs to reference IL2CPP interop assemblies generated from your FM26 installation. These cannot be legally redistributed in pre-built releases, so the plugin must be built locally using interop assemblies generated from your game's files.
 
 ### "Nothing is being read"
 

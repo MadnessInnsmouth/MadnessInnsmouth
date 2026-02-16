@@ -5,7 +5,7 @@ param(
     [string]$FM26Path = "",
     [switch]$Uninstall = $false,
     [switch]$Force = $false,
-    [string]$BepInExVersion = "5.4.23.2"
+    [string]$BepInExVersion = "6.0.0-be.688"
 )
 
 $ErrorActionPreference = "Stop"
@@ -25,7 +25,7 @@ Write-Host ""
 # Script configuration
 $ModName = "FM26 Accessibility Mod"
 $ModVersion = "1.0.0"
-$BepInExDownloadUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$BepInExVersion/BepInEx_win_x64_$BepInExVersion.zip"
+$BepInExDownloadUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$BepInExVersion/BepInEx-Unity.IL2CPP-win-x64-$BepInExVersion.zip"
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  $ModName Installer v$ModVersion" -ForegroundColor Cyan
@@ -210,20 +210,20 @@ function Install-BepInEx {
     if ((Test-Path $bepInExPath) -and -not $Force) {
         Write-Host "BepInEx directory already exists." -ForegroundColor Green
         
-        # Verify core files exist
-        $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.dll"
+        # Verify core files exist (BepInEx 6 IL2CPP layout)
+        $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.IL2CPP.dll"
+        $coreFileFallback = Join-Path $GamePath "BepInEx\core\BepInEx.Unity.IL2CPP.dll"
         Write-Host "  [VERBOSE] Verifying core file: $coreFile" -ForegroundColor Gray
-        if (-not (Test-Path $coreFile)) {
-            Write-Host "  [WARNING] BepInEx installation appears incomplete (BepInEx.dll missing). Reinstalling..." -ForegroundColor Yellow
+        if (-not ((Test-Path $coreFile) -or (Test-Path $coreFileFallback))) {
+            Write-Host "  [WARNING] BepInEx 6 IL2CPP installation appears incomplete. Reinstalling..." -ForegroundColor Yellow
         } else {
-            $coreSize = (Get-Item $coreFile).Length
-            Write-Host "  [VERBOSE] BepInEx.dll found ($([math]::Round($coreSize / 1KB, 2)) KB). Skipping reinstall." -ForegroundColor Gray
+            Write-Host "  [VERBOSE] BepInEx 6 IL2CPP core found. Skipping reinstall." -ForegroundColor Gray
             return $true
         }
     }
     
     Write-Host ""
-    Write-Host "Installing BepInEx $BepInExVersion..." -ForegroundColor Cyan
+    Write-Host "Installing BepInEx $BepInExVersion (IL2CPP)..." -ForegroundColor Cyan
     
     # Create temp directory
     $tempDir = Join-Path $env:TEMP "FM26Mod_Temp"
@@ -236,7 +236,7 @@ function Install-BepInEx {
     
     # Download BepInEx
     $zipPath = Join-Path $tempDir "BepInEx.zip"
-    Write-Host "Downloading BepInEx..."
+    Write-Host "Downloading BepInEx 6 IL2CPP..."
     Write-Host "  [VERBOSE] Target URL: $BepInExDownloadUrl" -ForegroundColor Gray
     if (-not (Download-File -Url $BepInExDownloadUrl -OutputPath $zipPath)) {
         Write-Host "  [ERROR] Failed to download BepInEx. Check your internet connection and that the URL is reachable." -ForegroundColor Red
@@ -253,11 +253,11 @@ function Install-BepInEx {
         return $false
     }
     
-    # Verify installation
-    $coreFile = Join-Path $GamePath "BepInEx\core\BepInEx.dll"
-    Write-Host "  [VERBOSE] Verifying installation: checking $coreFile" -ForegroundColor Gray
-    if (-not (Test-Path $coreFile)) {
-        Write-Host "  [ERROR] BepInEx installation verification failed. Core file not found at: $coreFile" -ForegroundColor Red
+    # Verify installation (BepInEx 6 IL2CPP structure)
+    $bepInExCoreDir = Join-Path $GamePath "BepInEx\core"
+    Write-Host "  [VERBOSE] Verifying installation: checking $bepInExCoreDir" -ForegroundColor Gray
+    if (-not (Test-Path $bepInExCoreDir)) {
+        Write-Host "  [ERROR] BepInEx installation verification failed. Core directory not found." -ForegroundColor Red
         # List what was actually extracted
         Write-Host "  [VERBOSE] Contents of BepInEx directory:" -ForegroundColor Gray
         if (Test-Path $bepInExPath) {
@@ -274,7 +274,7 @@ function Install-BepInEx {
     Write-Host "  [VERBOSE] Cleaning up temp directory..." -ForegroundColor Gray
     Remove-Item $tempDir -Recurse -Force
     
-    Write-Host "BepInEx installed successfully!" -ForegroundColor Green
+    Write-Host "BepInEx 6 IL2CPP installed successfully!" -ForegroundColor Green
     return $true
 }
 
@@ -468,56 +468,61 @@ function Build-PluginAutomatically {
     } else {
         Write-Host "  [INFO] Build script not found. Attempting direct build..." -ForegroundColor Cyan
         
-        # Create lib directory and download BepInEx if needed
+        # Create lib directories
         $libPath = Join-Path $repoRoot "lib"
+        $interopPath = Join-Path $libPath "interop"
         if (-not (Test-Path $libPath)) {
             New-Item -ItemType Directory -Path $libPath -Force | Out-Null
         }
-        
-        $bepinexDll = Join-Path $libPath "BepInEx.dll"
-        if (-not (Test-Path $bepinexDll)) {
-            Write-Host "  [INFO] Downloading BepInEx libraries..." -ForegroundColor Cyan
-            try {
-                $tempDir = Join-Path $env:TEMP "BepInEx_Build_$([guid]::NewGuid())"
-                New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-                
-                $zipPath = Join-Path $tempDir "BepInEx.zip"
-                $bepInExVersion = "5.4.23.2"
-                $bepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$bepInExVersion/BepInEx_win_x64_$bepInExVersion.zip"
-                
-                Invoke-WebRequest -Uri $bepInExUrl -OutFile $zipPath -UseBasicParsing
-                Expand-Archive -Path $zipPath -DestinationPath $tempDir -Force
-                
-                Copy-Item -Path "$tempDir\BepInEx\core\BepInEx.dll" -Destination $libPath -Force
-                Copy-Item -Path "$tempDir\BepInEx\core\0Harmony.dll" -Destination $libPath -Force
-                
-                Remove-Item -Path $tempDir -Recurse -Force
-                Write-Host "  [SUCCESS] BepInEx libraries downloaded." -ForegroundColor Green
-            } catch {
-                Write-Host "  [ERROR] Failed to download BepInEx: $_" -ForegroundColor Red
-                return $false
-            }
+        if (-not (Test-Path $interopPath)) {
+            New-Item -ItemType Directory -Path $interopPath -Force | Out-Null
         }
         
-        # Copy Unity assemblies from FM26 installation
-        $unityPath = Join-Path $GamePath "fm_Data\Managed"
-        if (Test-Path $unityPath) {
-            Write-Host "  [INFO] Copying Unity assemblies from FM26..." -ForegroundColor Cyan
-            $unityDlls = @(
-                "UnityEngine.dll",
-                "UnityEngine.CoreModule.dll",
-                "UnityEngine.UI.dll",
-                "UnityEngine.TextRenderingModule.dll"
-            )
-            foreach ($dll in $unityDlls) {
-                $sourceDll = Join-Path $unityPath $dll
-                if (Test-Path $sourceDll) {
-                    Copy-Item -Path $sourceDll -Destination $libPath -Force
-                    Write-Host "  [VERBOSE] Copied: $dll" -ForegroundColor Gray
+        # BepInEx 6 dependencies are resolved via NuGet; no manual download needed
+        Write-Host "  [INFO] BepInEx 6 dependencies will be resolved via NuGet restore." -ForegroundColor Cyan
+        
+        # Check for IL2CPP build and generate interop assemblies
+        $gameAssembly = Join-Path $GamePath "GameAssembly.dll"
+        $globalMetadata = Join-Path $GamePath "fm_Data\il2cpp_data\Metadata\global-metadata.dat"
+        
+        if ((Test-Path $gameAssembly) -and (Test-Path $globalMetadata)) {
+            Write-Host "  [INFO] IL2CPP build detected. Interop assemblies needed." -ForegroundColor Cyan
+            Write-Host "  [INFO] Checking for Cpp2IL..." -ForegroundColor Cyan
+            
+            $cpp2ilAvailable = $false
+            try {
+                $cpp2ilOutput = & Cpp2IL --version 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    $cpp2ilAvailable = $true
+                    Write-Host "  [VERBOSE] Cpp2IL found: $cpp2ilOutput" -ForegroundColor Gray
+                } else {
+                    Write-Host "  [VERBOSE] Cpp2IL returned non-zero exit code." -ForegroundColor Gray
                 }
+            } catch {
+                Write-Host "  [VERBOSE] Cpp2IL not found on PATH: $($_.Exception.Message)" -ForegroundColor Gray
+            }
+            
+            if ($cpp2ilAvailable) {
+                Write-Host "  [INFO] Generating interop assemblies with Cpp2IL..." -ForegroundColor Cyan
+                try {
+                    & Cpp2IL --game-path $GamePath --output-as "dummydll" --output-to $interopPath
+                    Write-Host "  [SUCCESS] Interop assemblies generated." -ForegroundColor Green
+                } catch {
+                    Write-Host "  [WARNING] Cpp2IL failed: $_" -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "  [WARNING] Cpp2IL not found. Install with: dotnet tool install -g Cpp2IL" -ForegroundColor Yellow
+                Write-Host "  [WARNING] Interop assemblies must be provided manually in lib/interop/" -ForegroundColor Yellow
             }
         } else {
-            Write-Host "  [WARNING] Unity assemblies not found at: $unityPath" -ForegroundColor Yellow
+            # Fall back: check for Mono managed folder (unlikely for FM26 retail)
+            $unityPath = Join-Path $GamePath "fm_Data\Managed"
+            if (Test-Path $unityPath) {
+                Write-Host "  [WARNING] Mono build detected. This plugin targets IL2CPP." -ForegroundColor Yellow
+                Write-Host "  [WARNING] FM26 retail uses IL2CPP; check your game installation." -ForegroundColor Yellow
+            } else {
+                Write-Host "  [WARNING] Could not locate IL2CPP metadata or Mono assemblies." -ForegroundColor Yellow
+            }
         }
         
         # Build the project
@@ -532,8 +537,8 @@ function Build-PluginAutomatically {
                 }
             }
             
-            # Check if build succeeded
-            $builtDll = Join-Path $repoRoot "src\FM26AccessibilityPlugin\bin\Release\net48\FM26AccessibilityPlugin.dll"
+            # Check if build succeeded (net6.0 output path)
+            $builtDll = Join-Path $repoRoot "src\FM26AccessibilityPlugin\bin\Release\net6.0\FM26AccessibilityPlugin.dll"
             if (Test-Path $builtDll) {
                 # Copy to build directory
                 $buildDir = Join-Path $repoRoot "build"

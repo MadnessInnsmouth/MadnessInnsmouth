@@ -6,19 +6,21 @@ This document provides technical details about how the FM26 Accessibility Plugin
 
 The plugin consists of three main components:
 
-1. **BepInEx Plugin** - Loads into FM26 and provides the entry point
-2. **Accessibility Manager** - Coordinates accessibility features
+1. **BepInEx Plugin** - Loads into FM26 via IL2CPP injection and provides the entry point
+2. **Accessibility Manager** - Coordinates accessibility features (registered via `ClassInjector.RegisterTypeInIl2Cpp`)
 3. **Screen Reader Interface** - Communicates with Windows screen readers
 
 ### Component Diagram
 
 ```
-FM26 Game (Unity)
+FM26 Game (Unity IL2CPP)
     ↓
-BepInEx Framework
+BepInEx 6 Framework (IL2CPP)
     ↓
-FM26AccessibilityPlugin
-    ├─ AccessibilityManager
+Il2CppInterop Runtime
+    ↓
+FM26AccessibilityPlugin (BasePlugin)
+    ├─ AccessibilityManager (registered via ClassInjector)
     │   ├─ ScreenReaderInterface
     │   └─ UIAccessibilityTracker
     └─ Harmony Patches (UIPatches)
@@ -28,14 +30,16 @@ FM26AccessibilityPlugin
 
 ### 1. Plugin Initialization
 
-When FM26 starts with BepInEx installed:
+When FM26 starts with BepInEx 6 installed:
 
 ```csharp
-1. BepInEx loads all plugins from BepInEx/plugins/
-2. FM26AccessibilityPlugin.Awake() is called
-3. Harmony patches are applied to Unity UI components
-4. AccessibilityManager GameObject is created
-5. Screen reader detection begins
+1. BepInEx 6 loads and runs Cpp2IL/Il2CppInterop to generate runtime interop
+2. BepInEx loads all plugins from BepInEx/plugins/
+3. FM26AccessibilityPlugin.Load() is called (BasePlugin entry point)
+4. ClassInjector.RegisterTypeInIl2Cpp<T>() registers MonoBehaviour types
+5. Harmony patches are applied to Unity UI components
+6. AccessibilityManager GameObject is created
+7. Screen reader detection begins
 ```
 
 ### 2. UI Tracking
@@ -142,16 +146,19 @@ src/FM26AccessibilityPlugin/
 
 ### Key Classes
 
-#### AccessibilityPlugin (BepInEx Plugin)
-- **Purpose**: Entry point for BepInEx
+#### AccessibilityPlugin (BepInEx BasePlugin)
+- **Purpose**: Entry point for BepInEx 6
+- **Base Class**: `BasePlugin` (not `BaseUnityPlugin` — IL2CPP requires this)
 - **Lifecycle**: Created when FM26 starts
 - **Responsibilities**:
+  - Register MonoBehaviour types via `ClassInjector.RegisterTypeInIl2Cpp<T>()`
   - Initialize Harmony
   - Create AccessibilityManager
   - Provide logging utilities
 
 #### AccessibilityManager (MonoBehaviour)
 - **Purpose**: Coordinates all accessibility features
+- **Constructor**: Requires `IntPtr` constructor for IL2CPP compatibility
 - **Lifecycle**: Persistent across scenes (DontDestroyOnLoad)
 - **Responsibilities**:
   - Manage child components
@@ -365,7 +372,7 @@ Currently, automated testing is limited due to the need for FM26 runtime. Future
 - **Solution**: Run `build/build.ps1` to download dependencies
 
 **Issue**: Wrong .NET version
-- **Solution**: Ensure .NET Framework 4.8 SDK is installed
+- **Solution**: Ensure .NET 6.0 SDK is installed
 
 ### Runtime Issues
 
@@ -420,7 +427,8 @@ Currently, automated testing is limited due to the need for FM26 runtime. Future
 ## References
 
 ### Documentation
-- BepInEx Docs: http://docs.bepinex.dev/
+- BepInEx 6 Docs: https://docs.bepinex.dev/master/
+- Il2CppInterop: https://github.com/BepInEx/Il2CppInterop
 - Harmony Wiki: https://harmony.pardeike.net/
 - Unity UI Docs: https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/index.html
 
