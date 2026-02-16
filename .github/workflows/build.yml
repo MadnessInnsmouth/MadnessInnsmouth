@@ -145,31 +145,63 @@ jobs:
       
     - name: Create build artifacts
       run: |
-        New-Item -ItemType Directory -Path build -Force | Out-Null
+        # Create artifacts directory with full repository structure
+        $artifactsDir = "artifacts"
+        New-Item -ItemType Directory -Path $artifactsDir -Force | Out-Null
         
-        # Copy DLL if build succeeded
-        $dllPath = "src/FM26AccessibilityPlugin/bin/Release/net48/FM26AccessibilityPlugin.dll"
-        if (Test-Path $dllPath) {
-          Copy-Item -Path $dllPath -Destination "build/" -Force
-          Write-Host "Build successful - DLL copied to build/"
+        Write-Host "Creating release package with full repository structure..."
+        
+        # Copy entire repository structure needed for automatic build
+        # This includes src/, build/, install/, lib/, and documentation
+        
+        # Copy src folder (required for automatic build)
+        Write-Host "  Copying src/ folder..."
+        Copy-Item -Path "src" -Destination "$artifactsDir/src" -Recurse -Force
+        
+        # Copy build folder with build script
+        Write-Host "  Copying build/ folder..."
+        Copy-Item -Path "build" -Destination "$artifactsDir/build" -Recurse -Force
+        
+        # Copy install folder with installer scripts
+        Write-Host "  Copying install/ folder..."
+        Copy-Item -Path "install" -Destination "$artifactsDir/install" -Recurse -Force
+        
+        # Copy lib folder (may be empty, but structure is needed)
+        Write-Host "  Copying lib/ folder..."
+        if (Test-Path "lib") {
+          Copy-Item -Path "lib" -Destination "$artifactsDir/lib" -Recurse -Force
         } else {
-          Write-Host "Note: Build requires Unity assemblies for completion"
-          Write-Host "Creating package without DLL for documentation purposes"
+          New-Item -ItemType Directory -Path "$artifactsDir/lib" -Force | Out-Null
         }
         
-        # Always include scripts and documentation
-        Copy-Item -Path "install/Install-FM26Accessibility.ps1" -Destination "build/" -Force
-        Copy-Item -Path "install/Install-FM26Accessibility.bat" -Destination "build/" -Force
-        Copy-Item -Path "README.md" -Destination "build/" -Force
-        Copy-Item -Path "QUICKSTART.md" -Destination "build/" -Force
-        Copy-Item -Path "LICENSE" -Destination "build/" -Force
+        # Copy documentation files
+        Write-Host "  Copying documentation..."
+        Copy-Item -Path "README.md" -Destination "$artifactsDir/" -Force
+        Copy-Item -Path "QUICKSTART.md" -Destination "$artifactsDir/" -Force
+        Copy-Item -Path "BUILD.md" -Destination "$artifactsDir/" -Force
+        Copy-Item -Path "TROUBLESHOOTING.md" -Destination "$artifactsDir/" -Force
+        Copy-Item -Path "LICENSE" -Destination "$artifactsDir/" -Force
+        
+        # If DLL was built in CI (unlikely without Unity), copy it to build output
+        $dllPath = "src/FM26AccessibilityPlugin/bin/Release/net48/FM26AccessibilityPlugin.dll"
+        if (Test-Path $dllPath) {
+          Copy-Item -Path $dllPath -Destination "$artifactsDir/build/" -Force
+          Write-Host "  Pre-built DLL included (CI build succeeded)"
+        } else {
+          Write-Host "  No pre-built DLL (will be built locally by installer)"
+        }
+        
+        Write-Host ""
+        Write-Host "Artifact structure created successfully!"
+        Write-Host "Contents:"
+        Get-ChildItem -Path $artifactsDir -Recurse -Name | ForEach-Object { Write-Host "  $_" }
       shell: pwsh
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: FM26AccessibilityPlugin
-        path: build/
+        path: artifacts/
         
   release:
     needs: build
@@ -217,50 +249,100 @@ jobs:
         body: |
           ## FM26 Accessibility Mod Release ${{ steps.version.outputs.VERSION }}
           
-          ### ⚠️ Important: First-Time Setup
+          ### ⚠️ Important: Automatic Build Installation
           
-          **Pre-built plugin DLLs are NOT included** in this release due to Unity licensing restrictions.
+          This release includes the **complete source code** and **automatic build system**.
           
-          The installer will **automatically build the plugin** for you using the Unity assemblies from your FM26 installation.
+          The installer will **automatically build the plugin** for you using Unity assemblies from your FM26 installation.
+          No manual compilation needed!
           
-          **Requirements for automatic build:**
-          - ✅ .NET SDK installed ([Download here](https://dotnet.microsoft.com/download) if needed)
+          **Requirements:**
+          - ✅ .NET SDK installed ([Download here](https://dotnet.microsoft.com/download))
           - ✅ Football Manager 2026 installed
-          - ✅ Internet connection (to download BepInEx)
+          - ✅ Internet connection (for downloading BepInEx)
           
-          First-time installation takes a few minutes while the plugin is built.
+          ### 📦 What's Included
           
-          ### Installation Steps
-          1. Download `FM26-Accessibility-Mod-${{ steps.version.outputs.VERSION }}.zip` below
-          2. Extract to a folder
-          3. **Ensure .NET SDK is installed** (see requirements above)
-          4. **Double-click `Install-FM26Accessibility.bat`** to run the installer
-          5. Follow the on-screen instructions (installer will build and install automatically)
+          This release contains the **full repository structure**:
+          - `src/` - Complete source code for automatic local build
+          - `build/` - Build scripts with auto-detection
+          - `install/` - Automated installer
+          - `lib/` - Library folder (populated during build)
+          - Documentation (README, QUICKSTART, BUILD, TROUBLESHOOTING)
           
-          ### What's Included
-          - Automatic installer with build capability
-          - Installer launcher (`Install-FM26Accessibility.bat`)
-          - PowerShell installer script
-          - Complete documentation
+          **Why include source?** Unity DLLs cannot be legally redistributed, so the plugin must be built on your machine using your FM26 installation. This happens automatically!
           
-          ### Requirements
-          - Football Manager 2026
-          - Windows 10/11 (64-bit)
-          - **.NET SDK** (for automatic build) - [Download](https://dotnet.microsoft.com/download)
-          - .NET Framework 4.8 or higher (usually pre-installed on Windows)
-          - Screen reader (NVDA, JAWS, or Narrator)
+          ### 🚀 Installation Steps
           
-          ### Troubleshooting
+          1. **Download** `FM26-Accessibility-Mod-${{ steps.version.outputs.VERSION }}.zip` below
+          2. **Extract** to a folder (e.g., `C:\FM26Mod\`)
+          3. **Ensure .NET SDK is installed** - [Download here](https://dotnet.microsoft.com/download) if needed
+          4. **Double-click** `Install-FM26Accessibility.bat` to run the installer
+          5. **Follow on-screen instructions** - the installer will:
+             - Detect your FM26 installation
+             - Check for .NET SDK
+             - Download BepInEx
+             - Build the plugin automatically
+             - Install everything to FM26
           
-          **"Plugin DLL not found" error?**
+          First-time installation takes 2-3 minutes (includes automatic build).
+          
+          ### 🔧 How Automatic Build Works
+          
+          When you run the installer:
+          1. It locates your FM26 installation
+          2. Downloads BepInEx libraries
+          3. Copies Unity DLLs from FM26 to a temporary location
+          4. Compiles the plugin using .NET SDK
+          5. Installs the compiled plugin to FM26
+          
+          Everything is done locally and legally. No proprietary files are redistributed.
+          
+          ### 📋 System Requirements
+          
+          - **Game**: Football Manager 2026
+          - **OS**: Windows 10/11 (64-bit)
+          - **Build Tool**: .NET SDK (6.0 or later) - [Download](https://dotnet.microsoft.com/download)
+          - **Runtime**: .NET Framework 4.8 or higher (usually pre-installed)
+          - **Screen Reader**: NVDA, JAWS, or Narrator
+          
+          ### 🆘 Troubleshooting
+          
+          **Error: ".NET SDK not found"**
           - Install .NET SDK from https://dotnet.microsoft.com/download
-          - Run the installer again
+          - Restart PowerShell/Command Prompt
+          - Run installer again
           
-          **Still having issues?**
-          - See QUICKSTART.md in the zip for detailed troubleshooting
-          - Or manually build: see BUILD.md
+          **Error: "Project file not found"**
+          - Make sure you extracted the ENTIRE zip file, not just installer scripts
+          - The `src/` folder must be present
           
-          ### Getting Started
-          See QUICKSTART.md in the zip file for a complete step-by-step guide!
+          **Error: "Could not find FM26 installation"**
+          - Run installer with: `.\install\Install-FM26Accessibility.ps1 -FM26Path "C:\path\to\Football Manager 2026"`
+          
+          **Build succeeded but mod not working?**
+          - Check `install-log.log` in the install folder
+          - See TROUBLESHOOTING.md for detailed help
+          
+          ### 📚 Documentation
+          
+          - **QUICKSTART.md** - Quick installation guide
+          - **BUILD.md** - Manual build instructions
+          - **TROUBLESHOOTING.md** - Detailed troubleshooting guide
+          - **README.md** - Full documentation
+          
+          ### ⚖️ Legal & Architecture Notes
+          
+          This distribution method is:
+          - ✅ Legally compliant (no Unity DLLs redistributed)
+          - ✅ Secure (builds from source you can inspect)
+          - ✅ Automatic (one-click for users)
+          - ✅ Professional (industry-standard approach)
+          
+          The automatic build happens on **your machine** using **your FM26 files**.
+          
+          ---
+          
+          **Questions?** Open an issue or see documentation in the zip file!
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

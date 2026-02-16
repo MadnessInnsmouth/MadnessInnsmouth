@@ -4,7 +4,8 @@
 param(
     [string]$Configuration = "Release",
     [string]$OutputPath = "",
-    [switch]$SkipDownload = $false
+    [switch]$SkipDownload = $false,
+    [string]$FM26Path = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +13,29 @@ $ErrorActionPreference = "Stop"
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  FM26 Accessibility Plugin Build Script" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Check for .NET SDK
+Write-Host "Checking prerequisites..." -ForegroundColor Yellow
+try {
+    $dotnetVersion = & dotnet --version 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet command failed"
+    }
+    Write-Host "  .NET SDK: $dotnetVersion" -ForegroundColor Green
+} catch {
+    Write-Host ""
+    Write-Host "ERROR: .NET SDK is not installed or not on PATH" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "The .NET SDK is required to build the FM26 Accessibility Plugin." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Please install it from:" -ForegroundColor Cyan
+    Write-Host "  https://dotnet.microsoft.com/download" -ForegroundColor White
+    Write-Host ""
+    Write-Host "After installation, restart PowerShell and try again." -ForegroundColor Yellow
+    Write-Host ""
+    exit 1
+}
 Write-Host ""
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -64,32 +88,49 @@ function Get-BepInExLibraries {
 
 # Function to get Unity libraries from FM26
 function Get-UnityLibraries {
+    param([string]$ProvidedFM26Path = "")
+    
     Write-Host ""
     Write-Host "Searching for Unity libraries from FM26 installation..." -ForegroundColor Yellow
     
-    # Try to find FM26
-    $fm26Paths = @(
-        "C:\Program Files (x86)\Steam\steamapps\common\Football Manager 2026",
-        "C:\Program Files\Steam\steamapps\common\Football Manager 2026",
-        "D:\Steam\steamapps\common\Football Manager 2026"
-    )
-    
-    # Check registry for Steam
-    try {
-        $steamPath = (Get-ItemProperty -Path "HKCU:\Software\Valve\Steam" -Name "SteamPath" -ErrorAction SilentlyContinue).SteamPath
-        if ($steamPath) {
-            $steamPath = $steamPath.Replace('/', '\')
-            $fm26Paths += "$steamPath\steamapps\common\Football Manager 2026"
-        }
-    } catch {}
-    
     $fm26Path = $null
-    foreach ($path in $fm26Paths) {
-        if (Test-Path $path) {
-            $managedPath = Join-Path $path "fm_Data\Managed"
+    
+    # If FM26Path was provided as parameter, use it first
+    if (-not [string]::IsNullOrEmpty($ProvidedFM26Path)) {
+        Write-Host "Using provided FM26 path: $ProvidedFM26Path" -ForegroundColor Green
+        if (Test-Path $ProvidedFM26Path) {
+            $managedPath = Join-Path $ProvidedFM26Path "fm_Data\Managed"
             if (Test-Path $managedPath) {
                 $fm26Path = $managedPath
-                break
+            }
+        }
+    }
+    
+    # If not found or not provided, try to auto-detect
+    if (-not $fm26Path) {
+        # Try to find FM26
+        $fm26Paths = @(
+            "C:\Program Files (x86)\Steam\steamapps\common\Football Manager 2026",
+            "C:\Program Files\Steam\steamapps\common\Football Manager 2026",
+            "D:\Steam\steamapps\common\Football Manager 2026"
+        )
+        
+        # Check registry for Steam
+        try {
+            $steamPath = (Get-ItemProperty -Path "HKCU:\Software\Valve\Steam" -Name "SteamPath" -ErrorAction SilentlyContinue).SteamPath
+            if ($steamPath) {
+                $steamPath = $steamPath.Replace('/', '\')
+                $fm26Paths += "$steamPath\steamapps\common\Football Manager 2026"
+            }
+        } catch {}
+        
+        foreach ($path in $fm26Paths) {
+            if (Test-Path $path) {
+                $managedPath = Join-Path $path "fm_Data\Managed"
+                if (Test-Path $managedPath) {
+                    $fm26Path = $managedPath
+                    break
+                }
             }
         }
     }
@@ -201,7 +242,7 @@ try {
         }
         
         if (-not $unityExists) {
-            if (-not (Get-UnityLibraries)) {
+            if (-not (Get-UnityLibraries -ProvidedFM26Path $FM26Path)) {
                 Write-Host ""
                 Write-Host "WARNING: Could not obtain Unity libraries." -ForegroundColor Yellow
                 Write-Host "Build may fail without these libraries." -ForegroundColor Yellow
