@@ -24,7 +24,7 @@ Write-Host ""
 
 # Script configuration
 $ModName = "FM26 Accessibility Mod"
-$ModVersion = "1.0.0"
+$ModVersion = "1.0.53"
 $BepInExDownloadUrl = "https://github.com/BepInEx/BepInEx/releases/download/v$BepInExVersion/BepInEx_win_x64_$BepInExVersion.zip"
 
 Write-Host "============================================" -ForegroundColor Cyan
