@@ -78,7 +78,7 @@ function Find-FM26Installation {
             $possiblePaths += "$steamPath\steamapps\common\Football Manager 2026"
         }
     } catch {
-        # Silent failure - registry key not available
+        # Silent failure - registry key not available on non-Steam installations or restricted access
     }
 
     # Check each possible path in order
@@ -540,7 +540,7 @@ function Build-PluginAutomatically {
                     $cpp2ilAvailable = $true
                 }
             } catch {
-                # Cpp2IL not available
+                # Cpp2IL not available - will fall back to manual interop assembly installation
             }
             
             if ($cpp2ilAvailable) {
