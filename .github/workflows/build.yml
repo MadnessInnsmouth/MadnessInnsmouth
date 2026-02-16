@@ -98,12 +98,49 @@ jobs:
         Write-Host "Note: Real Unity assemblies should be provided for production builds"
       shell: pwsh
         
+    - name: Determine version
+      id: version
+      run: |
+        if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+          $version = "${{ github.ref_name }}"
+        } else {
+          $version = "v1.0.${{ github.run_number }}"
+        }
+        $versionNumber = $version.TrimStart('v')
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "VERSION_NUMBER=$versionNumber" >> $env:GITHUB_OUTPUT
+        Write-Host "Version: $version ($versionNumber)"
+      shell: pwsh
+
+    - name: Stamp version in source files
+      run: |
+        $version = "${{ steps.version.outputs.VERSION_NUMBER }}"
+
+        # Update PluginInfo.cs
+        $pluginInfoPath = "src/FM26AccessibilityPlugin/PluginInfo.cs"
+        $before = Get-Content $pluginInfoPath -Raw
+        $after = $before -replace 'PLUGIN_VERSION = "[^"]+"', "PLUGIN_VERSION = `"$version`""
+        if ($before -eq $after) { Write-Error "Failed to stamp version in PluginInfo.cs"; exit 1 }
+        [System.IO.File]::WriteAllText($pluginInfoPath, $after)
+        Write-Host "Updated PluginInfo.cs"
+
+        # Update installer script
+        $installerPath = "install/Install-FM26Accessibility.ps1"
+        $before = Get-Content $installerPath -Raw
+        $after = $before -replace '\$ModVersion = "[^"]+"', "`$ModVersion = `"$version`""
+        if ($before -eq $after) { Write-Error "Failed to stamp version in Install-FM26Accessibility.ps1"; exit 1 }
+        [System.IO.File]::WriteAllText($installerPath, $after)
+        Write-Host "Updated Install-FM26Accessibility.ps1"
+
+        Write-Host "All source versions stamped to $version"
+      shell: pwsh
+
     - name: Restore dependencies
       run: dotnet restore src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj
       continue-on-error: true
       
     - name: Build plugin
-      run: dotnet build src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj --configuration Release --no-restore
+      run: dotnet build src/FM26AccessibilityPlugin/FM26AccessibilityPlugin.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.VERSION_NUMBER }}
       continue-on-error: true
       
     - name: Create build artifacts
