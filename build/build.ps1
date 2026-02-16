@@ -137,14 +137,56 @@ function Generate-InteropAssemblies {
         New-Item -ItemType Directory -Path $interopDir | Out-Null
     }
     
-    # Check if Cpp2IL is available
+    # Check if Cpp2IL is available - try multiple locations
     $cpp2ilPath = $null
-    try {
-        $cpp2ilPath = (Get-Command "Cpp2IL" -ErrorAction SilentlyContinue).Source
-    } catch {}
     
+    # 1. Check for standalone executable in script directory (most portable)
+    $scriptDirExe = Join-Path $scriptDir "Cpp2IL.exe"
+    if (Test-Path $scriptDirExe) {
+        $cpp2ilPath = $scriptDirExe
+        Write-Host "  Found Cpp2IL in script directory: Cpp2IL.exe" -ForegroundColor Gray
+    }
+    
+    # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
     if (-not $cpp2ilPath) {
-        # Try to find it as a dotnet tool
+        # Exclude the exact "Cpp2IL.exe" which was already checked above
+        $versionedExes = Get-ChildItem -Path $scriptDir -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "Cpp2IL.exe" } | Sort-Object LastWriteTime -Descending
+        if ($versionedExes) {
+            $cpp2ilPath = $versionedExes[0].FullName
+            Write-Host "  Found Cpp2IL in script directory: $($versionedExes[0].Name)" -ForegroundColor Gray
+            if ($versionedExes.Count -gt 1) {
+                Write-Host "  Note: Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Gray
+            }
+        }
+    }
+    
+    # 3. Check for standalone executable in common download locations
+    if (-not $cpp2ilPath) {
+        $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
+        if (Test-Path $downloadsDir) {
+            # Use -File to only search files, not directories; limit results to top 5 most recent
+            $downloadedExes = Get-ChildItem -Path $downloadsDir -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 5
+            if ($downloadedExes) {
+                $cpp2ilPath = $downloadedExes[0].FullName
+                # Sanitize path for display
+                $displayPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+                Write-Host "  Found Cpp2IL at: $displayPath" -ForegroundColor Gray
+                if ($downloadedExes.Count -gt 1) {
+                    Write-Host "  Note: Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Gray
+                }
+            }
+        }
+    }
+    
+    # 4. Check if it's available as a global dotnet tool
+    if (-not $cpp2ilPath) {
+        try {
+            $cpp2ilPath = (Get-Command "Cpp2IL" -ErrorAction SilentlyContinue).Source
+        } catch {}
+    }
+    
+    # 5. Check dotnet tool list to confirm it's installed
+    if (-not $cpp2ilPath) {
         try {
             & dotnet tool list -g 2>&1 | Select-String "Cpp2IL" | Out-Null
             if ($LASTEXITCODE -eq 0) {
@@ -187,22 +229,43 @@ function Generate-InteropAssemblies {
     
     if ($cpp2ilPath) {
         Write-Host "  Using Cpp2IL to generate interop assemblies..."
+        # Sanitize path for logging (remove user-specific parts)
+        $sanitizedPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+        $sanitizedGamePath = $GamePath -replace [regex]::Escape($env:USERPROFILE), '~'
+        Write-Host "  Command: & `"$sanitizedPath`" --game-path `"$sanitizedGamePath`" --output-as dummydll --output-to `"<interopDir>`"" -ForegroundColor Gray
         try {
+            # Use the call operator & to execute the Cpp2IL path
+            # This works whether $cpp2ilPath is a full path or just "Cpp2IL" from PATH
             & $cpp2ilPath --game-path $GamePath --output-as "dummydll" --output-to $interopDir
-            Write-Host "  Interop assemblies generated!" -ForegroundColor Green
-            return $true
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "  Interop assemblies generated!" -ForegroundColor Green
+                return $true
+            } else {
+                Write-Host "  Cpp2IL exited with code: $LASTEXITCODE" -ForegroundColor Red
+            }
         } catch {
             Write-Host "  Cpp2IL failed: $_" -ForegroundColor Red
         }
     }
     
     Write-Host ""
-    Write-Host "  Unable to use Cpp2IL. To generate interop assemblies manually:" -ForegroundColor Yellow
-    Write-Host "    1. Install Cpp2IL: dotnet tool install -g Cpp2IL" -ForegroundColor White
-    Write-Host "    2. Restart PowerShell" -ForegroundColor White
-    Write-Host "    3. Run: Cpp2IL --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopDir`"" -ForegroundColor White
+    Write-Host "  Unable to use Cpp2IL. To generate interop assemblies:" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "  Alternatively, place generated interop DLLs in: $interopDir" -ForegroundColor Yellow
+    Write-Host "  Option 1 - Install as dotnet global tool (recommended):" -ForegroundColor Cyan
+    Write-Host "    1. Run: dotnet tool install -g Cpp2IL" -ForegroundColor White
+    Write-Host "    2. Restart PowerShell" -ForegroundColor White
+    Write-Host "    3. Run this script again" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  Option 2 - Use standalone executable:" -ForegroundColor Cyan
+    Write-Host "    1. Download Cpp2IL executable (e.g., Cpp2IL-2022.0.7-Windows.exe)" -ForegroundColor White
+    Write-Host "    2. Place it in the script directory: $scriptDir" -ForegroundColor White
+    Write-Host "    3. Run this script again" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  Option 3 - Manual generation:" -ForegroundColor Cyan
+    Write-Host "    1. Run Cpp2IL manually:" -ForegroundColor White
+    Write-Host "       Cpp2IL --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopDir`"" -ForegroundColor White
+    Write-Host "    2. Or place pre-generated interop DLLs in: $interopDir" -ForegroundColor White
+    Write-Host ""
     
     return $false
 }
