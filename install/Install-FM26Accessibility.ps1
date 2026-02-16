@@ -197,8 +197,9 @@ function Extract-ZipFile {
                 
                 # Security: Validate path to prevent ZIP slip attacks
                 $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
-                $fullDestPath = [System.IO.Path]::GetFullPath($DestPath)
-                if (-not $fullTargetPath.StartsWith($fullDestPath)) {
+                $fullDestPath = [System.IO.Path]::GetFullPath($DestPath).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+                $fullDestPath = $fullDestPath + [System.IO.Path]::DirectorySeparatorChar
+                if (-not $fullTargetPath.StartsWith($fullDestPath, [StringComparison]::OrdinalIgnoreCase)) {
                     Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
                     continue
                 }
@@ -418,8 +419,9 @@ function Install-NVDAControllerClient {
                     
                     # Security: Validate path to prevent ZIP slip attacks
                     $fullTargetPath = [System.IO.Path]::GetFullPath($targetPath)
-                    $fullTempDir = [System.IO.Path]::GetFullPath($tempDir)
-                    if (-not $fullTargetPath.StartsWith($fullTempDir)) {
+                    $fullTempDir = [System.IO.Path]::GetFullPath($tempDir).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+                    $fullTempDir = $fullTempDir + [System.IO.Path]::DirectorySeparatorChar
+                    if (-not $fullTargetPath.StartsWith($fullTempDir, [StringComparison]::OrdinalIgnoreCase)) {
                         Write-Host "  [WARNING] Skipping potentially malicious entry: $($entry.FullName)" -ForegroundColor Yellow
                         continue
                     }
