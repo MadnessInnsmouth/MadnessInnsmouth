@@ -149,10 +149,13 @@ function Generate-InteropAssemblies {
     
     # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
     if (-not $cpp2ilPath) {
-        $versionedExe = Get-ChildItem -Path $scriptDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($versionedExe) {
-            $cpp2ilPath = $versionedExe.FullName
+        $versionedExes = Get-ChildItem -Path $scriptDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+        if ($versionedExes) {
+            $cpp2ilPath = $versionedExes[0].FullName
             Write-Host "  Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+            if ($versionedExes.Count -gt 1) {
+                Write-Host "  Note: Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Yellow
+            }
         }
     }
     
@@ -167,17 +170,24 @@ function Generate-InteropAssemblies {
         # Also check for any Cpp2IL*.exe in Downloads
         $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
         if (Test-Path $downloadsDir) {
-            $downloadedExe = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($downloadedExe) {
-                $commonPaths += $downloadedExe.FullName
+            $downloadedExes = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+            if ($downloadedExes) {
+                $cpp2ilPath = $downloadedExes[0].FullName
+                Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
+                if ($downloadedExes.Count -gt 1) {
+                    Write-Host "  Note: Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Yellow
+                }
             }
         }
         
-        foreach ($path in $commonPaths) {
-            if (Test-Path $path) {
-                $cpp2ilPath = $path
-                Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
-                break
+        # Fall back to specific paths if wildcard search didn't find anything
+        if (-not $cpp2ilPath) {
+            foreach ($path in $commonPaths) {
+                if (Test-Path $path) {
+                    $cpp2ilPath = $path
+                    Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
+                    break
+                }
             }
         }
     }
@@ -233,7 +243,10 @@ function Generate-InteropAssemblies {
     
     if ($cpp2ilPath) {
         Write-Host "  Using Cpp2IL to generate interop assemblies..."
-        Write-Host "  Command: & `"$cpp2ilPath`" --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopDir`"" -ForegroundColor Gray
+        # Sanitize path for logging (remove user-specific parts)
+        $sanitizedPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+        $sanitizedGamePath = $GamePath -replace [regex]::Escape($env:USERPROFILE), '~'
+        Write-Host "  Command: & `"$sanitizedPath`" --game-path `"$sanitizedGamePath`" --output-as dummydll --output-to `"<interopDir>`"" -ForegroundColor Gray
         try {
             # Use the call operator & to execute the Cpp2IL path
             # This works whether $cpp2ilPath is a full path or just "Cpp2IL" from PATH

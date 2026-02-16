@@ -545,10 +545,13 @@ function Build-PluginAutomatically {
             
             # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
             if (-not $cpp2ilPath) {
-                $versionedExe = Get-ChildItem -Path $PSScriptRoot -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-                if ($versionedExe) {
-                    $cpp2ilPath = $versionedExe.FullName
+                $versionedExes = Get-ChildItem -Path $PSScriptRoot -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+                if ($versionedExes) {
+                    $cpp2ilPath = $versionedExes[0].FullName
                     Write-Host "  [INFO] Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+                    if ($versionedExes.Count -gt 1) {
+                        Write-Host "  [INFO] Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Yellow
+                    }
                 }
             }
             
@@ -556,10 +559,13 @@ function Build-PluginAutomatically {
             if (-not $cpp2ilPath) {
                 $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
                 if (Test-Path $downloadsDir) {
-                    $downloadedExe = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-                    if ($downloadedExe) {
-                        $cpp2ilPath = $downloadedExe.FullName
+                    $downloadedExes = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+                    if ($downloadedExes) {
+                        $cpp2ilPath = $downloadedExes[0].FullName
                         Write-Host "  [INFO] Found Cpp2IL in Downloads: $cpp2ilPath" -ForegroundColor Gray
+                        if ($downloadedExes.Count -gt 1) {
+                            Write-Host "  [INFO] Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Yellow
+                        }
                     }
                 }
             }
@@ -579,7 +585,10 @@ function Build-PluginAutomatically {
             
             if ($cpp2ilPath) {
                 Write-Host "  [INFO] Generating interop assemblies with Cpp2IL..." -ForegroundColor Cyan
-                Write-Host "  [INFO] Command: & `"$cpp2ilPath`" --game-path `"$GamePath`" --output-as dummydll --output-to `"$interopPath`"" -ForegroundColor Gray
+                # Sanitize path for logging (remove user-specific parts)
+                $sanitizedPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+                $sanitizedGamePath = $GamePath -replace [regex]::Escape($env:USERPROFILE), '~'
+                Write-Host "  [INFO] Command: & `"$sanitizedPath`" --game-path `"$sanitizedGamePath`" --output-as dummydll --output-to `"<interopPath>`"" -ForegroundColor Gray
                 try {
                     # Use the call operator & to execute the Cpp2IL path
                     & $cpp2ilPath --game-path $GamePath --output-as "dummydll" --output-to $interopPath
