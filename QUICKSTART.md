@@ -21,6 +21,10 @@ Before you start, make sure you have:
 2. Download the latest `FM26-Accessibility-Mod-vX.X.X.zip` file
 3. Extract the ZIP file to a folder (e.g., `C:\FM26Mod\`)
 
+**Important Note:** Due to Unity licensing restrictions, pre-built plugin DLLs are not included in releases. The installer will automatically build the plugin for you using the Unity assemblies from your FM26 installation. This requires:
+- **.NET SDK** installed (download from https://dotnet.microsoft.com/download)
+- Internet connection (to download BepInEx)
+
 ### Step 2: Run the Installer
 
 1. **Double-click** `Install-FM26Accessibility.bat` to launch the installer
@@ -30,8 +34,11 @@ Before you start, make sure you have:
 5. The installer will:
    - Find your FM26 installation automatically
    - Download BepInEx (the modding framework)
+   - **Build the accessibility plugin** (if not already built)
    - Install the accessibility plugin
    - Configure everything for you
+
+**Note:** The first-time installation may take a few minutes while the plugin is built.
 
 ### Step 3: Launch the Game
 
@@ -61,6 +68,34 @@ Before you start, make sure you have:
 | **Space** | Toggle checkboxes |
 
 ## Troubleshooting
+
+### "Plugin DLL not found" or "Build failed"
+
+This happens when the installer cannot automatically build the plugin. Solutions:
+
+1. **Install .NET SDK** (if not already installed):
+   - Download from: https://dotnet.microsoft.com/download
+   - Install the latest .NET SDK (8.0 or higher recommended)
+   - Restart your PowerShell/Command Prompt
+   - Run the installer again
+
+2. **Manual Build**:
+   ```powershell
+   # From the extracted mod folder:
+   cd build
+   .\build.ps1 -FM26Path "C:\Path\To\Your\FM26"
+   ```
+   Then run the installer again.
+
+3. **Clone and Build from Repository** (alternative):
+   ```powershell
+   git clone https://github.com/MadnessInnsmouth/MadnessInnsmouth.git
+   cd MadnessInnsmouth
+   .\build\build.ps1
+   .\install\Install-FM26Accessibility.ps1
+   ```
+
+**Why this happens:** The plugin needs to reference Unity DLLs from your FM26 installation. These cannot be legally redistributed in pre-built releases, so the plugin must be built locally using your game's files.
 
 ### "Nothing is being read"
 

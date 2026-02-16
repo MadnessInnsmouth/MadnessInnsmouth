@@ -34,11 +34,12 @@ A comprehensive accessibility modification for Football Manager 2026 that makes 
 
 1. **Download** the latest release from the [Releases page](https://github.com/MadnessInnsmouth/MadnessInnsmouth/releases)
 2. **Extract** the ZIP file
-3. **Run** `Install-FM26Accessibility.bat` (double-click to launch the installer)
-4. **Follow** the on-screen instructions
-5. **Launch** Football Manager 2026
+3. **Ensure** you have .NET SDK installed (download from https://dotnet.microsoft.com/download if needed)
+4. **Run** `Install-FM26Accessibility.bat` (double-click to launch the installer)
+5. **Follow** the on-screen instructions (the installer will automatically build and install the plugin)
+6. **Launch** Football Manager 2026
 
-That's it! The installer handles everything else automatically.
+**Important:** Due to Unity licensing, pre-built plugin DLLs are not included in releases. The installer will automatically build the plugin using your FM26 installation's Unity assemblies. This requires .NET SDK and takes a few minutes on first install.
 
 ### Option 2: Manual Installation
 
