@@ -491,9 +491,16 @@ function Build-PluginAutomatically {
             
             $cpp2ilAvailable = $false
             try {
-                & Cpp2IL --version 2>&1 | Out-Null
-                $cpp2ilAvailable = $true
-            } catch {}
+                $cpp2ilOutput = & Cpp2IL --version 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    $cpp2ilAvailable = $true
+                    Write-Host "  [VERBOSE] Cpp2IL found: $cpp2ilOutput" -ForegroundColor Gray
+                } else {
+                    Write-Host "  [VERBOSE] Cpp2IL returned non-zero exit code." -ForegroundColor Gray
+                }
+            } catch {
+                Write-Host "  [VERBOSE] Cpp2IL not found on PATH: $($_.Exception.Message)" -ForegroundColor Gray
+            }
             
             if ($cpp2ilAvailable) {
                 Write-Host "  [INFO] Generating interop assemblies with Cpp2IL..." -ForegroundColor Cyan

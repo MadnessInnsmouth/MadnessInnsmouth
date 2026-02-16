@@ -41,7 +41,7 @@ namespace FM26AccessibilityPlugin
 
                 // Create the accessibility manager GameObject
                 var managerObj = new GameObject("FM26AccessibilityManager");
-                GameObject.DontDestroyOnLoad(managerObj);
+                UnityEngine.Object.DontDestroyOnLoad(managerObj);
                 managerObj.hideFlags = HideFlags.HideAndDontSave;
 
                 var manager = managerObj.AddComponent<AccessibilityManager>();
