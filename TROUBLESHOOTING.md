@@ -88,7 +88,7 @@ Before diving into specific issues, run this quick check:
 
 3. **Manual download**:
    - Visit: https://github.com/BepInEx/BepInEx/releases
-   - Download `BepInEx_win_x64_5.4.23.2.0.zip`
+   - Download `BepInEx_win_x64_5.4.23.2.zip`
    - Extract to FM26 directory manually
 
 4. **Specify different version**:
