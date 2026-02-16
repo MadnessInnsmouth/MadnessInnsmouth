@@ -540,15 +540,16 @@ function Build-PluginAutomatically {
             $scriptDirExe = Join-Path $PSScriptRoot "Cpp2IL.exe"
             if (Test-Path $scriptDirExe) {
                 $cpp2ilPath = $scriptDirExe
-                Write-Host "  [INFO] Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+                Write-Host "  [INFO] Found Cpp2IL in script directory: Cpp2IL.exe" -ForegroundColor Gray
             }
             
             # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
             if (-not $cpp2ilPath) {
-                $versionedExes = Get-ChildItem -Path $PSScriptRoot -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+                # Exclude the exact "Cpp2IL.exe" which was already checked above
+                $versionedExes = Get-ChildItem -Path $PSScriptRoot -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "Cpp2IL.exe" } | Sort-Object LastWriteTime -Descending
                 if ($versionedExes) {
                     $cpp2ilPath = $versionedExes[0].FullName
-                    Write-Host "  [INFO] Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+                    Write-Host "  [INFO] Found Cpp2IL in script directory: $($versionedExes[0].Name)" -ForegroundColor Gray
                     if ($versionedExes.Count -gt 1) {
                         Write-Host "  [INFO] Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Gray
                     }
@@ -559,10 +560,13 @@ function Build-PluginAutomatically {
             if (-not $cpp2ilPath) {
                 $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
                 if (Test-Path $downloadsDir) {
-                    $downloadedExes = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+                    # Use -File to only search files, not directories
+                    $downloadedExes = Get-ChildItem -Path $downloadsDir -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 5
                     if ($downloadedExes) {
                         $cpp2ilPath = $downloadedExes[0].FullName
-                        Write-Host "  [INFO] Found Cpp2IL in Downloads: $cpp2ilPath" -ForegroundColor Gray
+                        # Sanitize path for display
+                        $displayPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+                        Write-Host "  [INFO] Found Cpp2IL in Downloads: $displayPath" -ForegroundColor Gray
                         if ($downloadedExes.Count -gt 1) {
                             Write-Host "  [INFO] Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Gray
                         }

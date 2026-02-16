@@ -144,15 +144,16 @@ function Generate-InteropAssemblies {
     $scriptDirExe = Join-Path $scriptDir "Cpp2IL.exe"
     if (Test-Path $scriptDirExe) {
         $cpp2ilPath = $scriptDirExe
-        Write-Host "  Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+        Write-Host "  Found Cpp2IL in script directory: Cpp2IL.exe" -ForegroundColor Gray
     }
     
     # 2. Check for versioned executable in script directory (e.g., Cpp2IL-2022.0.7-Windows.exe)
     if (-not $cpp2ilPath) {
-        $versionedExes = Get-ChildItem -Path $scriptDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+        # Exclude the exact "Cpp2IL.exe" which was already checked above
+        $versionedExes = Get-ChildItem -Path $scriptDir -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "Cpp2IL.exe" } | Sort-Object LastWriteTime -Descending
         if ($versionedExes) {
             $cpp2ilPath = $versionedExes[0].FullName
-            Write-Host "  Found Cpp2IL in script directory: $cpp2ilPath" -ForegroundColor Gray
+            Write-Host "  Found Cpp2IL in script directory: $($versionedExes[0].Name)" -ForegroundColor Gray
             if ($versionedExes.Count -gt 1) {
                 Write-Host "  Note: Multiple Cpp2IL executables found. Using most recent: $($versionedExes[0].Name)" -ForegroundColor Gray
             }
@@ -161,32 +162,17 @@ function Generate-InteropAssemblies {
     
     # 3. Check for standalone executable in common download locations
     if (-not $cpp2ilPath) {
-        $commonPaths = @(
-            (Join-Path $env:USERPROFILE "Downloads\Cpp2IL.exe"),
-            (Join-Path $env:USERPROFILE "Downloads\Cpp2IL-2022.0.7-Windows.exe"),
-            (Join-Path $env:USERPROFILE "Downloads\Cpp2IL-Windows.exe")
-        )
-        
-        # Also check for any Cpp2IL*.exe in Downloads
         $downloadsDir = Join-Path $env:USERPROFILE "Downloads"
         if (Test-Path $downloadsDir) {
-            $downloadedExes = Get-ChildItem -Path $downloadsDir -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+            # Use -File to only search files, not directories; limit results to top 5 most recent
+            $downloadedExes = Get-ChildItem -Path $downloadsDir -File -Filter "Cpp2IL*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 5
             if ($downloadedExes) {
                 $cpp2ilPath = $downloadedExes[0].FullName
-                Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
+                # Sanitize path for display
+                $displayPath = $cpp2ilPath -replace [regex]::Escape($env:USERPROFILE), '~'
+                Write-Host "  Found Cpp2IL at: $displayPath" -ForegroundColor Gray
                 if ($downloadedExes.Count -gt 1) {
                     Write-Host "  Note: Multiple Cpp2IL executables found in Downloads. Using most recent: $($downloadedExes[0].Name)" -ForegroundColor Gray
-                }
-            }
-        }
-        
-        # Fall back to specific paths if wildcard search didn't find anything
-        if (-not $cpp2ilPath) {
-            foreach ($path in $commonPaths) {
-                if (Test-Path $path) {
-                    $cpp2ilPath = $path
-                    Write-Host "  Found Cpp2IL at: $cpp2ilPath" -ForegroundColor Gray
-                    break
                 }
             }
         }
