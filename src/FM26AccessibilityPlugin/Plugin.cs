@@ -200,45 +200,34 @@ namespace FM26AccessibilityPlugin
             if (buttons == null || buttons.Length == 0)
                 return;
 
-            // Compute a simple hash of button names to detect when the UI changes
-            int hash = buttons.Length;
+            // Collect menu item labels that match known main-menu entries
+            var menuItems = new System.Collections.Generic.List<string>();
+            var menuButtons = new System.Collections.Generic.List<Button>();
             foreach (var btn in buttons)
             {
-                if (btn != null && btn.gameObject != null)
-                    hash = hash * 31 + btn.gameObject.name.GetHashCode();
+                if (IsMainMenuButton(btn, out string label))
+                {
+                    menuItems.Add(label);
+                    menuButtons.Add(btn);
+                }
             }
+
+            if (menuItems.Count == 0)
+                return;
+
+            // Compute hash only from matched menu buttons to avoid false re-announcements
+            int hash = menuItems.Count;
+            foreach (string item in menuItems)
+                hash = hash * 31 + item.GetHashCode();
 
             if (hash != lastButtonHash)
             {
                 lastButtonHash = hash;
                 hasAnnounced = false;
-                logger?.LogInfo("MainMenuNarrator: detected UI button changes, re-scanning...");
+                logger?.LogInfo("MainMenuNarrator: detected main-menu button changes, re-scanning...");
             }
 
             if (hasAnnounced)
-                return;
-
-            // Collect menu item labels from buttons
-            var menuItems = new System.Collections.Generic.List<string>();
-            foreach (var btn in buttons)
-            {
-                string label = GetButtonLabel(btn);
-                if (string.IsNullOrEmpty(label))
-                    continue;
-
-                // Check if this looks like a main-menu button
-                string lower = label.ToLowerInvariant();
-                foreach (string known in MainMenuLabels)
-                {
-                    if (lower.Contains(known))
-                    {
-                        menuItems.Add(label);
-                        break;
-                    }
-                }
-            }
-
-            if (menuItems.Count == 0)
                 return;
 
             // Build announcement
@@ -247,28 +236,38 @@ namespace FM26AccessibilityPlugin
             screenReader?.Speak(announcement, true);
             hasAnnounced = true;
 
-            // Attempt to focus the first selectable menu button so keyboard navigation works immediately
-            foreach (var btn in buttons)
+            // Focus the first selectable menu button so keyboard navigation works immediately
+            if (menuButtons.Count > 0)
             {
-                string label = GetButtonLabel(btn);
-                if (string.IsNullOrEmpty(label))
-                    continue;
-
-                string lower = label.ToLowerInvariant();
-                foreach (string known in MainMenuLabels)
+                var es = EventSystem.current;
+                if (es != null)
                 {
-                    if (lower.Contains(known))
-                    {
-                        var es = EventSystem.current;
-                        if (es != null)
-                        {
-                            es.SetSelectedGameObject(btn.gameObject);
-                            logger?.LogInfo($"MainMenuNarrator: focused first menu button '{label}'");
-                        }
-                        return;
-                    }
+                    es.SetSelectedGameObject(menuButtons[0].gameObject);
+                    logger?.LogInfo($"MainMenuNarrator: focused first menu button '{menuItems[0]}'");
                 }
             }
+        }
+
+        private bool IsMainMenuButton(Button btn, out string matchedLabel)
+        {
+            matchedLabel = null;
+            if (btn == null)
+                return false;
+
+            string label = GetButtonLabel(btn);
+            if (string.IsNullOrEmpty(label))
+                return false;
+
+            string lower = label.ToLowerInvariant();
+            foreach (string known in MainMenuLabels)
+            {
+                if (lower.Contains(known))
+                {
+                    matchedLabel = label;
+                    return true;
+                }
+            }
+            return false;
         }
 
         private string GetButtonLabel(Button btn)
