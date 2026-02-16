@@ -195,8 +195,9 @@ function Extract-ZipFile {
             foreach ($entry in $zip.Entries) {
                 $targetPath = Join-Path $DestPath $entry.FullName
                 
-                # Handle directory entries (entries ending with / are directories)
-                if ($entry.FullName.EndsWith('/')) {
+                # Handle directory entries (per ZIP spec, directories end with /)
+                # Check for backslash too for robustness with non-standard ZIPs
+                if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
                     # Create the directory if it doesn't exist
                     if (-not (Test-Path $targetPath)) {
                         New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
@@ -407,8 +408,9 @@ function Install-NVDAControllerClient {
                 foreach ($entry in $zip.Entries) {
                     $targetPath = Join-Path $tempDir $entry.FullName
                     
-                    # Handle directory entries
-                    if ($entry.FullName.EndsWith('/')) {
+                    # Handle directory entries (per ZIP spec, directories end with /)
+                    # Check for backslash too for robustness with non-standard ZIPs
+                    if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
                         if (-not (Test-Path $targetPath)) {
                             New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
                         }
