@@ -94,6 +94,7 @@ namespace FM26AccessibilityPlugin
         private ManualLogSource logger;
         private ScreenReaderInterface screenReader;
         private UIAccessibilityTracker uiTracker;
+        private MainMenuNarrator menuNarrator;
         private float updateInterval = 0.1f;
         private float nextUpdate = 0f;
 
@@ -111,6 +112,10 @@ namespace FM26AccessibilityPlugin
                 // Initialize UI tracker
                 uiTracker = gameObject.AddComponent<UIAccessibilityTracker>();
                 uiTracker.Initialize(logger, screenReader);
+
+                // Initialize main menu narrator
+                menuNarrator = gameObject.AddComponent<MainMenuNarrator>();
+                menuNarrator.Initialize(logger, screenReader);
 
                 logger.LogInfo("Accessibility Manager components initialized!");
             }
@@ -136,6 +141,155 @@ namespace FM26AccessibilityPlugin
                     logger?.LogError($"Error in Update: {ex}");
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Detects main menu screens and narrates menu items for screen reader users.
+    /// Scans for common FM main-menu labels such as Continue, New Game, Load Game, etc.
+    /// and announces them when a new menu screen is loaded.
+    /// </summary>
+    public class MainMenuNarrator : MonoBehaviour
+    {
+        private ManualLogSource logger;
+        private ScreenReaderInterface screenReader;
+
+        // Known main-menu button labels (case-insensitive matching)
+        private static readonly string[] MainMenuLabels = new[]
+        {
+            "continue", "new game", "load game", "start game",
+            "preferences", "options", "settings",
+            "create a club", "fantasy draft",
+            "online", "multiplayer",
+            "editor", "extras", "credits",
+            "exit", "quit"
+        };
+
+        private int lastButtonHash = 0;
+        private float scanInterval = 1.0f;
+        private float nextScan = 0f;
+        private bool hasAnnounced = false;
+
+        public void Initialize(ManualLogSource log, ScreenReaderInterface reader)
+        {
+            logger = log;
+            screenReader = reader;
+            logger.LogInfo("MainMenuNarrator initialized. Will scan for main menu screens.");
+        }
+
+        private void Update()
+        {
+            if (Time.time < nextScan)
+                return;
+            nextScan = Time.time + scanInterval;
+
+            try
+            {
+                ScanForMainMenu();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"MainMenuNarrator scan error: {ex}");
+            }
+        }
+
+        private void ScanForMainMenu()
+        {
+            // Gather all active buttons in the scene
+            var buttons = FindObjectsOfType<Button>();
+            if (buttons == null || buttons.Length == 0)
+                return;
+
+            // Collect menu item labels that match known main-menu entries
+            var menuItems = new System.Collections.Generic.List<string>();
+            var menuButtons = new System.Collections.Generic.List<Button>();
+            foreach (var btn in buttons)
+            {
+                if (IsMainMenuButton(btn, out string label))
+                {
+                    menuItems.Add(label);
+                    menuButtons.Add(btn);
+                }
+            }
+
+            if (menuItems.Count == 0)
+                return;
+
+            // Compute hash only from matched menu buttons to avoid false re-announcements
+            int hash = menuItems.Count;
+            foreach (string item in menuItems)
+                hash = hash * 31 + item.GetHashCode();
+
+            if (hash != lastButtonHash)
+            {
+                lastButtonHash = hash;
+                hasAnnounced = false;
+                logger?.LogInfo("MainMenuNarrator: detected main-menu button changes, re-scanning...");
+            }
+
+            if (hasAnnounced)
+                return;
+
+            // Build announcement
+            string announcement = $"Main Menu. {menuItems.Count} items: " + string.Join(", ", menuItems.ToArray());
+            logger?.LogInfo($"MainMenuNarrator announcing: {announcement}");
+            screenReader?.Speak(announcement, true);
+            hasAnnounced = true;
+
+            // Focus the first selectable menu button so keyboard navigation works immediately
+            if (menuButtons.Count > 0)
+            {
+                var es = EventSystem.current;
+                if (es != null)
+                {
+                    es.SetSelectedGameObject(menuButtons[0].gameObject);
+                    logger?.LogInfo($"MainMenuNarrator: focused first menu button '{menuItems[0]}'");
+                }
+            }
+        }
+
+        private bool IsMainMenuButton(Button btn, out string matchedLabel)
+        {
+            matchedLabel = null;
+            if (btn == null)
+                return false;
+
+            string label = GetButtonLabel(btn);
+            if (string.IsNullOrEmpty(label))
+                return false;
+
+            string lower = label.ToLowerInvariant();
+            foreach (string known in MainMenuLabels)
+            {
+                if (lower.Contains(known))
+                {
+                    matchedLabel = label;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private string GetButtonLabel(Button btn)
+        {
+            if (btn == null)
+                return null;
+
+            // Try child Text component
+            var text = btn.GetComponentInChildren<Text>();
+            if (text != null && !string.IsNullOrEmpty(text.text))
+                return text.text.Trim();
+
+            // Try TextMeshPro
+            try
+            {
+                var tmp = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+                if (tmp != null && !string.IsNullOrEmpty(tmp.text))
+                    return tmp.text.Trim();
+            }
+            catch { }
+
+            return btn.gameObject.name;
         }
     }
 

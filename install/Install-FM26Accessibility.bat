@@ -10,6 +10,7 @@ echo   FM26 Accessibility Mod Installer
 echo ============================================
 echo.
 echo Launching installer...
+echo All output will be logged to: %~dp0install-log.log
 echo.
 
 :: Run the PowerShell installer script with bypass execution policy
@@ -19,6 +20,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install-FM26Access
 if %ERRORLEVEL% neq 0 (
     echo.
     echo Installation encountered an issue. See messages above.
+    echo A detailed log has been saved to: %~dp0install-log.log
     echo.
 )
 
