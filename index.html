@@ -3,176 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accessible Media Player | [Your Username]</title>
+    <title>MadnessInnsmouth | Digital Tools & Media</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0d1117;
-            --card-bg: #161b22;
-            --text: #c9d1d9;
-            --accent: #58a6ff;
-            --border: #30363d;
-            --success: #238636;
+            --bg-color: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #007AFF; /* Apple-style Blue */
+            --text-main: #ffffff;
+            --text-dim: #a1a1a1;
+            --success: #34c759;
         }
+
+        * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
             margin: 0;
-            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        header {
-            border-bottom: 1px solid var(--border);
-            padding: 2rem 1rem;
-            text-align: center;
-            background: linear-gradient(to bottom, #161b22, #0d1117);
+        /* --- NAVIGATION & HAMBURGER --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 1000;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
+        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
         }
 
-        h1, h2, h3 { color: #fff; }
-        
-        .badge {
-            background: var(--accent);
-            color: #000;
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            vertical-align: middle;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        .nav-links {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            padding: 5rem 2rem;
             gap: 1.5rem;
-            margin: 2rem 0;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: 8px;
-        }
+        .nav-links.active { right: 0; }
 
-        code {
-            background: #21262d;
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-            color: #ff7b72;
-        }
-
-        pre {
-            background: #161b22;
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            border: 1px solid var(--border);
-        }
-
-        .download-btn {
-            display: inline-block;
-            background: var(--success);
-            color: #fff;
-            padding: 1rem 2rem;
+        .nav-links a {
+            color: var(--text-main);
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
             font-size: 1.1rem;
-            margin-top: 1rem;
+            font-weight: 500;
+            padding: 0.8rem;
+            border-radius: 8px;
         }
 
-        .download-btn:hover { background: #2ea043; }
+        .nav-links a:hover { background: var(--glass); color: var(--accent); }
 
-        section { margin-bottom: 4rem; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
-        
-        footer { text-align: center; padding: 4rem 0; font-size: 0.9rem; color: #8b949e; }
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 120px 2rem 60px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-        /* Accessibility: High Focus Visibility */
-        a:focus, button:focus {
-            outline: 3px solid var(--accent);
-            outline-offset: 4px;
+        .hero h1 { font-size: 4rem; margin: 0; letter-spacing: -2px; line-height: 1.1; }
+        .hero p { color: var(--text-dim); font-size: 1.4rem; max-width: 600px; margin: 1.5rem auto; }
+
+        /* --- CONTENT CARDS --- */
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        .project-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-item h3 { color: var(--accent); margin-bottom: 0.5rem; }
+        .feature-item p { font-size: 0.95rem; color: var(--text-dim); }
+
+        /* --- INSTALLATION GUIDE TABLE --- */
+        .install-box {
+            background: #000;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid var(--accent);
+        }
+
+        .method-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .method-link:last-child { border-bottom: none; }
+        .method-link:hover { background: var(--glass); }
+        .method-tag { background: var(--accent); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .project-card { padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Accessible Media Player</h1>
-    <p>A fully VoiceOver-optimized iOS power-user tool.</p>
-    <a href="#install" class="download-btn">Get the IPA</a>
-</header>
-
-<div class="container">
-    
-    <section id="about">
-        <h2>The Vision</h2>
-        <p>Built for the blind, by a blind developer. This isn't just a media player; it's a statement against "walled garden" limitations. No subscriptions, no tracking, just high-fidelity audio and document management.</p>
-    </section>
-
-    <section id="features">
-        <h2>Features</h2>
-        <div class="grid">
-            <div class="card">
-                <h3>High-End Audio</h3>
-                <ul>
-                    <li>10-band Parametric EQ</li>
-                    <li>±12 Semitone Pitch Shift</li>
-                    <li>0.25x – 4.0x Speed Control</li>
-                    <li>Spatial Audio Support</li>
-                </ul>
-            </div>
-            <div class="card">
-                <h3>Document Engine</h3>
-                <ul>
-                    <li>PDF, HTML, RTF, Markdown</li>
-                    <li>Native Text-to-Speech Ready</li>
-                    <li>Night Mode & Custom Fonts</li>
-                    <li>Secure-Scoped Bookmarks</li>
-                </ul>
-            </div>
+    <nav>
+        <div class="logo">MadnessInnsmouth</div>
+        <button class="menu-toggle" aria-label="Open Menu" onclick="toggleMenu()">☰</button>
+        <div class="nav-links" id="navLinks">
+            <a href="#projects" onclick="toggleMenu()">Projects</a>
+            <a href="#install" onclick="toggleMenu()">Installation</a>
+            <hr style="width: 100%; border: 0; border-top: 1px solid var(--glass-border);">
+            <a href="/accessibility" onclick="toggleMenu()">Accessibility Statement</a>
+            <a href="/privacy" onclick="toggleMenu()">Privacy Policy</a>
+            <a href="/terms" onclick="toggleMenu()">Terms of Service</a>
         </div>
-    </section>
+    </nav>
 
-    <section id="install">
-        <h2>Sideloading Guide</h2>
-        <p>Since this app provides features Apple forbids, you won't find it on the App Store. Here is how you install it:</p>
+    <div class="hero">
+        <h1>Digital Tools. <br><span style="color: var(--accent)">No Compromises.</span></h1>
+        <p>Premium, high-performance applications designed with absolute accessibility as the core foundation.</p>
+    </div>
+
+    <div class="container">
         
-        <h3>1. Download the IPA</h3>
-        <p>Grab the latest build from the <a href="#" style="color: var(--accent);">GitHub Releases</a> page.</p>
+        <section id="projects">
+            <div class="project-card">
+                <h2 style="font-size: 2.5rem; margin-bottom: 0;">Accessible Media Player</h2>
+                <p style="color: var(--accent); font-weight: 600;">iOS • Performance Grade</p>
+                
+                <p>A fully VoiceOver-optimized media engine and document architect. Built for those who require precision control over their library without the friction of mainstream player limitations.</p>
 
-        <h3>2. Choose Your Method</h3>
-        <ul>
-            <li><strong>AltStore (Recommended):</strong> Drag the IPA into AltStore. Requires a 7-day refresh.</li>
-            <li><strong>TrollStore:</strong> Permanent installation for iOS 14.0 – 16.7 users.</li>
-            <li><strong>Sideloadly:</strong> Simple desktop-to-iPhone sideloading.</li>
-        </ul>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h3>Audio Mastery</h3>
+                        <p>10-band parametric EQ, independent pitch shifting (±12 semitones), and variable speed (0.25x - 4.0x) without distortion.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Document Logic</h3>
+                        <p>High-speed rendering for PDF, HTML, and Markdown with native night-mode and custom typeface scaling.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>Zero Friction</h3>
+                        <p>Complete background playback, Now Playing integration, and rapid audio extraction from any video file.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <h3>3. Trust the Developer</h3>
-        <p>Go to <code>Settings > General > VPN & Device Management</code> and trust your Apple ID profile.</p>
-    </section>
+        <section id="install">
+            <h2>Installation & Sideloading</h2>
+            <p>To maintain advanced features that bypass system restrictions, this application is distributed via IPA. Choose your preferred environment:</p>
+            
+            <div class="install-box">
+                <a href="https://sidestore.io/" class="method-link" target="_blank">
+                    <span><strong>SideStore</strong> (Recommended - No PC required after setup)</span>
+                    <span class="method-tag">BEST</span>
+                </a>
+                <a href="https://altstore.io/" class="method-link" target="_blank">
+                    <span><strong>AltStore</strong> (Reliable - Requires periodic PC sync)</span>
+                </a>
+                <a href="https://sideloadly.io/" class="method-link" target="_blank">
+                    <span><strong>Sideloadly</strong> (Quick desktop-to-device installs)</span>
+                </a>
+                <a href="https://github.com/opa334/TrollStore" class="method-link" target="_blank">
+                    <span><strong>TrollStore</strong> (Permanent - Limited iOS versions)</span>
+                </a>
+            </div>
 
-    <section id="technical">
-        <h2>Technical Architecture</h2>
-        <p>Built with <strong>SwiftUI</strong> and <strong>AVAudioEngine</strong>. The audio chain uses an 8-layer overlap algorithm for the highest quality time-stretching available on iOS.</p>
-        <pre>
-Player → TimePitch → 10-band EQ → Reverb mix → Output
-        </pre>
-    </section>
+            <div style="margin-top: 2rem; padding: 1.5rem; background: var(--glass); border-radius: 12px; font-size: 0.9rem;">
+                <strong>Configuration Note:</strong> After installation, navigate to <code>Settings > General > VPN & Device Management</code> to authorize the developer profile on your device.
+            </div>
+        </section>
 
-</div>
+    </div>
 
-<footer>
-    <p>&copy; 2026 [Your Username]. All projects are open-source and community-driven.</p>
-</footer>
+    <footer>
+        <p>&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
+        <p style="font-size: 0.8rem;">Dedicated to building tools that respect user autonomy and accessibility.</p>
+    </footer>
 
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('navLinks');
+            nav.classList.toggle('active');
+            
+            // Update ARIA label for screen readers
+            const btn = document.querySelector('.menu-toggle');
+            const expanded = nav.classList.contains('active');
+            btn.setAttribute('aria-expanded', expanded);
+            btn.innerText = expanded ? '✕' : '☰';
+        }
+    </script>
 </body>
 </html>
