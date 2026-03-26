@@ -3,244 +3,942 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MadnessInnsmouth | Digital Tools & Media</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>MadnessInnsmouth — Personal Portfolio</title>
+    <meta name="description" content="Personal portfolio of MadnessInnsmouth — apps, salineous tools, and whatever else comes to mind.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ===== CSS VARIABLES ===== */
         :root {
-            --bg-color: #050505;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #007AFF; /* Apple-style Blue */
-            --text-main: #ffffff;
-            --text-dim: #a1a1a1;
-            --success: #34c759;
+            --bg:              #080808;
+            --surface:         #101010;
+            --surface-raised:  #191919;
+            --border:          rgba(255, 255, 255, 0.08);
+            --border-hover:    rgba(255, 255, 255, 0.18);
+            --accent:          #0A84FF;
+            --accent-dim:      rgba(10, 132, 255, 0.15);
+            --accent-border:   rgba(10, 132, 255, 0.3);
+            --text:            #f5f5f7;
+            --text-secondary:  #8e8e93;
+            --drawer-w:        320px;
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* --- NAVIGATION & HAMBURGER --- */
-        nav {
+        /* ===== SKIP LINK ===== */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 1rem;
+            z-index: 9999;
+            padding: 0.6rem 1.25rem;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            border-radius: 0 0 8px 8px;
+            transition: top 0.15s;
+        }
+        .skip-link:focus { top: 0; outline: 3px solid #fff; outline-offset: 2px; }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
             position: fixed;
-            top: 0;
-            width: 100%;
-            height: 70px;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--glass-border);
+            inset: 0 0 auto 0;
+            height: 60px;
+            background: rgba(8, 8, 8, 0.88);
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
-            z-index: 1000;
+            padding: 0 1.5rem;
+            z-index: 100;
         }
 
-        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
-
-        .menu-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 10px;
-            z-index: 1001;
+        .navbar-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text);
+            text-decoration: none;
         }
+        .navbar-logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
 
-        .nav-links {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 300px;
-            height: 100vh;
-            background: #111;
+        /* ===== HAMBURGER BUTTON ===== */
+        .hamburger-btn {
             display: flex;
             flex-direction: column;
-            padding: 5rem 2rem;
-            gap: 1.5rem;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .nav-links.active { right: 0; }
-
-        .nav-links a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 500;
-            padding: 0.8rem;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
             border-radius: 8px;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+        .hamburger-btn:hover { background: rgba(255, 255, 255, 0.07); }
+        .hamburger-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+        .h-line {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 2px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity   0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hamburger-btn[aria-expanded="true"] .h-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger-btn[aria-expanded="true"] .h-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger-btn[aria-expanded="true"] .h-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* ===== DRAWER OVERLAY ===== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .drawer-overlay.open { opacity: 1; visibility: visible; }
+
+        /* ===== NAVIGATION DRAWER ===== */
+        .nav-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: var(--drawer-w);
+            background: #111111;
+            border-left: 1px solid var(--border);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .nav-drawer.open { transform: translateX(0); }
+
+        /* Drawer header */
+        .drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .drawer-head-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .drawer-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1;
+            transition: background 0.15s;
+        }
+        .drawer-close:hover { background: rgba(255, 255, 255, 0.12); }
+        .drawer-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* Drawer nav body */
+        .drawer-body { flex: 1; padding: 0.5rem 0; }
+
+        /* Accordion section */
+        .drawer-section { border-bottom: 1px solid var(--border); }
+
+        .drawer-section-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.85rem 1.25rem;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s;
+        }
+        .drawer-section-btn:hover { background: rgba(255, 255, 255, 0.04); }
+        .drawer-section-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+        .drawer-chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            transition: transform 0.25s ease;
+            flex-shrink: 0;
+        }
+        .drawer-section-btn[aria-expanded="true"] .drawer-chevron { transform: rotate(180deg); }
+
+        /* Accordion content */
+        .drawer-section-panel {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .drawer-section-panel.open { max-height: 500px; }
+
+        /* App cards inside drawer */
+        .drawer-app {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.7rem 1.25rem 0.7rem 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+        .drawer-app:hover { background: rgba(255, 255, 255, 0.04); }
+        .drawer-app:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+        .drawer-app-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 11px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .drawer-app-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        .drawer-app-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
         }
 
-        .nav-links a:hover { background: var(--glass); color: var(--accent); }
+        /* Plain nav link */
+        .drawer-link {
+            display: block;
+            padding: 0.85rem 1.25rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s, color 0.15s;
+        }
+        .drawer-link:hover { background: rgba(255, 255, 255, 0.04); color: var(--accent); }
+        .drawer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-        /* --- HERO SECTION --- */
+        /* Drawer footer */
+        .drawer-foot {
+            padding: 1.25rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            flex-shrink: 0;
+        }
+        .drawer-foot a {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .drawer-foot a:hover { color: var(--text); }
+        .drawer-foot a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+        /* ===== MAIN ===== */
+        main { padding-top: 60px; }
+
+        /* ===== HERO ===== */
         .hero {
-            padding: 120px 2rem 60px;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 7rem 2rem 5rem;
             text-align: center;
-            max-width: 1000px;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.28rem 0.9rem;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-border);
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.75rem;
+        }
+        .hero-pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.6rem, 6.5vw, 4.75rem);
+            font-weight: 800;
+            letter-spacing: -2.5px;
+            line-height: 1.04;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .accent { color: var(--accent); }
+
+        .hero-intro {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 0.875rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.7rem 1.6rem;
+            border-radius: 100px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(10, 132, 255, 0.28);
+        }
+        .btn-primary:hover { background: #1a8fff; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(10, 132, 255, 0.38); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border-hover);
+        }
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255,255,255,0.28); transform: translateY(-1px); }
+
+        /* ===== SECTION LAYOUT ===== */
+        .section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+        }
+
+        hr.divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            max-width: 1100px;
             margin: 0 auto;
         }
 
-        .hero h1 { font-size: 4rem; margin: 0; letter-spacing: -2px; line-height: 1.1; }
-        .hero p { color: var(--text-dim); font-size: 1.4rem; max-width: 600px; margin: 1.5rem auto; }
-
-        /* --- CONTENT CARDS --- */
-        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-
-        .project-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
-            margin-bottom: 3rem;
+        .section-eyebrow {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            margin-bottom: 0.6rem;
+        }
+        .section-title {
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+        .section-sub {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            max-width: 480px;
+            margin-bottom: 2.5rem;
         }
 
-        .feature-grid {
+        /* ===== APP CARDS ===== */
+        .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
         }
 
-        .feature-item h3 { color: var(--accent); margin-bottom: 0.5rem; }
-        .feature-item p { font-size: 0.95rem; color: var(--text-dim); }
-
-        /* --- INSTALLATION GUIDE TABLE --- */
-        .install-box {
-            background: #000;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-top: 2rem;
-            border: 1px solid var(--accent);
+        .app-card {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            text-decoration: none;
+            color: var(--text);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
         }
+        .app-card::after {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(10, 132, 255, 0.45) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .app-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.45); }
+        .app-card:hover::after { opacity: 1; }
+        .app-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-        .method-link {
+        .app-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+        .app-icon-wrap {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+        .app-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 1px solid;
+        }
+        .app-badge-ios {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+        .app-badge-soon {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.04);
+            border-color: var(--border);
+        }
+        .app-card-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.6rem;
+        }
+        .app-card-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            flex: 1;
+            margin-bottom: 1.5rem;
+        }
+        .app-card-foot {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
-            border-bottom: 1px solid var(--glass-border);
-            text-decoration: none;
-            color: var(--text-main);
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.78rem;
+        }
+        .app-card-meta { color: var(--text-secondary); }
+        .app-card-cta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent);
+            font-weight: 600;
         }
 
-        .method-link:last-child { border-bottom: none; }
-        .method-link:hover { background: var(--glass); }
-        .method-tag { background: var(--accent); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; }
+        /* ===== MISC CARDS ===== */
+        .misc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+        .misc-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+        .misc-card:hover { border-color: var(--border-hover); }
+        .misc-card-emoji { font-size: 1.75rem; margin-bottom: 0.875rem; }
+        .misc-card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+        .misc-card-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .misc-tag {
+            display: inline-block;
+            margin-top: 0.875rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            font-size: 0.67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
 
-        /* --- FOOTER --- */
+        /* ===== FOOTER ===== */
         footer {
-            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 2rem;
             text-align: center;
-            border-top: 1px solid var(--glass-border);
-            color: var(--text-dim);
+        }
+        .footer-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.25rem 1.25rem;
+            list-style: none;
+            margin-bottom: 1.25rem;
+        }
+        .footer-nav a {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            text-decoration: none;
+            padding: 0.2rem 0;
+            transition: color 0.15s;
+        }
+        .footer-nav a:hover { color: var(--text); }
+        .footer-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+        .footer-copy { font-size: 0.78rem; color: var(--text-secondary); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .hero { padding: 5rem 1.25rem 3.5rem; }
+            .section { padding: 3.5rem 1.25rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .misc-grid  { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 380px) {
+            :root { --drawer-w: 100vw; }
         }
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .project-card { padding: 1.5rem; }
+        /* ===== REDUCED MOTION ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+            html { scroll-behavior: auto; }
         }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo">MadnessInnsmouth</div>
-        <button class="menu-toggle" aria-label="Open Menu" onclick="toggleMenu()">☰</button>
-        <div class="nav-links" id="navLinks">
-            <a href="#projects" onclick="toggleMenu()">Projects</a>
-            <a href="#install" onclick="toggleMenu()">Installation</a>
-            <hr style="width: 100%; border: 0; border-top: 1px solid var(--glass-border);">
-            <a href="/accessibility" onclick="toggleMenu()">Accessibility Statement</a>
-            <a href="/privacy" onclick="toggleMenu()">Privacy Policy</a>
-            <a href="/terms" onclick="toggleMenu()">Terms of Service</a>
-        </div>
-    </nav>
+    <!-- Keyboard skip link -->
+    <a class="skip-link" href="#main">Skip to main content</a>
 
-    <div class="hero">
-        <h1>Digital Tools. <br><span style="color: var(--accent)">No Compromises.</span></h1>
-        <p>Premium, high-performance applications designed with absolute accessibility as the core foundation.</p>
+    <!-- Backdrop overlay -->
+    <div
+        class="drawer-overlay"
+        id="drawerOverlay"
+        aria-hidden="true"
+        onclick="closeDrawer()"
+    ></div>
+
+    <!-- ===== NAVBAR ===== -->
+    <header>
+        <nav class="navbar" aria-label="Main navigation">
+            <a class="navbar-logo" href="/" aria-label="MadnessInnsmouth — home">MadnessInnsmouth</a>
+            <button
+                class="hamburger-btn"
+                id="menuBtn"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+                aria-controls="navDrawer"
+                onclick="openDrawer()"
+            >
+                <span class="h-line" aria-hidden="true"></span>
+                <span class="h-line" aria-hidden="true"></span>
+                <span class="h-line" aria-hidden="true"></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- ===== NAVIGATION DRAWER ===== -->
+    <div
+        class="nav-drawer"
+        id="navDrawer"
+        role="dialog"
+        aria-label="Navigation menu"
+        aria-modal="true"
+    >
+        <!-- Drawer header -->
+        <div class="drawer-head">
+            <span class="drawer-head-label">Menu</span>
+            <button
+                class="drawer-close"
+                id="drawerCloseBtn"
+                aria-label="Close navigation menu"
+                onclick="closeDrawer()"
+            >&#x2715;</button>
+        </div>
+
+        <!-- Drawer nav -->
+        <nav class="drawer-body" aria-label="Site sections">
+
+            <!-- Apps accordion -->
+            <div class="drawer-section">
+                <button
+                    class="drawer-section-btn"
+                    id="appsAccordionBtn"
+                    aria-expanded="false"
+                    aria-controls="appsPanel"
+                    onclick="toggleApps()"
+                >
+                    Apps
+                    <svg class="drawer-chevron" aria-hidden="true" viewBox="0 0 16 16" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 6 8 10 12 6"/>
+                    </svg>
+                </button>
+                <div class="drawer-section-panel" id="appsPanel" role="region" aria-labelledby="appsAccordionBtn">
+                    <a class="drawer-app" href="apps/accessible-media-player.html">
+                        <div class="drawer-app-icon" aria-hidden="true">🎵</div>
+                        <div>
+                            <div class="drawer-app-name">Accessible Media Player</div>
+                            <div class="drawer-app-sub">iOS · Audio &amp; Documents</div>
+                        </div>
+                    </a>
+                    <a class="drawer-app" href="apps/coming-soon.html">
+                        <div class="drawer-app-icon" aria-hidden="true">⚡</div>
+                        <div>
+                            <div class="drawer-app-name">Next App</div>
+                            <div class="drawer-app-sub">Coming Soon</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Miscellaneous link -->
+            <a class="drawer-link" href="#misc" onclick="closeDrawer()">Miscellaneous</a>
+
+        </nav>
+
+        <!-- Drawer footer -->
+        <div class="drawer-foot">
+            <a href="accessibility.html">Accessibility Statement</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+        </div>
     </div>
 
-    <div class="container">
-        
-        <section id="projects">
-            <div class="project-card">
-                <h2 style="font-size: 2.5rem; margin-bottom: 0;">Accessible Media Player</h2>
-                <p style="color: var(--accent); font-weight: 600;">iOS • Performance Grade</p>
-                
-                <p>A fully VoiceOver-optimized media engine and document architect. Built for those who require precision control over their library without the friction of mainstream player limitations.</p>
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main">
 
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <h3>Audio Mastery</h3>
-                        <p>10-band parametric EQ, independent pitch shifting (±12 semitones), and variable speed (0.25x - 4.0x) without distortion.</p>
+        <!-- HERO -->
+        <section class="hero" aria-labelledby="hero-heading">
+            <div class="hero-pill" aria-label="Personal portfolio">
+                <span class="hero-pill-dot" aria-hidden="true"></span>
+                Personal Portfolio
+            </div>
+            <h1 id="hero-heading">
+                Ideas turned into<br>
+                <span class="accent">real things.</span>
+            </h1>
+            <p class="hero-intro">
+                Welcome. I'm MadnessInnsmouth — I build iOS apps, salineous tools, and
+                whatever else my brain decides to conjure up. This is my personal corner of
+                the web where everything I make finds a home, from polished projects to
+                half-finished experiments that seemed like a good idea at the time.
+            </p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="#apps">Browse Apps</a>
+                <a class="btn btn-ghost" href="#misc">Miscellaneous</a>
+            </div>
+        </section>
+
+        <hr class="divider" aria-hidden="true">
+
+        <!-- APPS -->
+        <section class="section" id="apps" aria-labelledby="apps-heading">
+            <p class="section-eyebrow" aria-hidden="true">Apps</p>
+            <h2 class="section-title" id="apps-heading">Things I've built</h2>
+            <p class="section-sub">iOS apps and tools, crafted with accessibility at the core.</p>
+
+            <div class="cards-grid">
+
+                <!-- Card 1 — Accessible Media Player -->
+                <a
+                    class="app-card"
+                    href="apps/accessible-media-player.html"
+                    aria-label="Accessible Media Player — iOS audio and document app. Learn more."
+                >
+                    <div class="app-card-top">
+                        <div class="app-icon-wrap" aria-hidden="true">🎵</div>
+                        <span class="app-badge app-badge-ios">iOS</span>
                     </div>
-                    <div class="feature-item">
-                        <h3>Document Logic</h3>
-                        <p>High-speed rendering for PDF, HTML, and Markdown with native night-mode and custom typeface scaling.</p>
+                    <h3 class="app-card-name">Accessible Media Player</h3>
+                    <p class="app-card-desc">
+                        A fully VoiceOver-optimised media engine. 10-band parametric EQ,
+                        pitch shifting, variable speed playback, and PDF/Markdown document
+                        rendering — built from the ground up for accessibility.
+                    </p>
+                    <div class="app-card-foot">
+                        <span class="app-card-meta">Audio · Documents · iOS</span>
+                        <span class="app-card-cta" aria-hidden="true">
+                            View
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="2" y1="6.5" x2="11" y2="6.5"/>
+                                <polyline points="7.5 3 11 6.5 7.5 10"/>
+                            </svg>
+                        </span>
                     </div>
-                    <div class="feature-item">
-                        <h3>Zero Friction</h3>
-                        <p>Complete background playback, Now Playing integration, and rapid audio extraction from any video file.</p>
+                </a>
+
+                <!-- Card 2 — Coming Soon -->
+                <a
+                    class="app-card"
+                    href="apps/coming-soon.html"
+                    aria-label="Next App — Coming soon. Learn more."
+                >
+                    <div class="app-card-top">
+                        <div class="app-icon-wrap" aria-hidden="true">⚡</div>
+                        <span class="app-badge app-badge-soon">Soon</span>
                     </div>
+                    <h3 class="app-card-name">Next App</h3>
+                    <p class="app-card-desc">
+                        Something new is in the works. Brewing quietly until it's ready
+                        to go — another tool built to solve a real problem, or just
+                        because it seemed worth making.
+                    </p>
+                    <div class="app-card-foot">
+                        <span class="app-card-meta">Coming Soon</span>
+                        <span class="app-card-cta" aria-hidden="true">
+                            View
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="2" y1="6.5" x2="11" y2="6.5"/>
+                                <polyline points="7.5 3 11 6.5 7.5 10"/>
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <hr class="divider" aria-hidden="true">
+
+        <!-- MISCELLANEOUS -->
+        <section class="section" id="misc" aria-labelledby="misc-heading">
+            <p class="section-eyebrow" aria-hidden="true">Miscellaneous</p>
+            <h2 class="section-title" id="misc-heading">Random brain output</h2>
+            <p class="section-sub">Experiments, ideas, and one-off tools that didn't fit neatly anywhere else.</p>
+
+            <div class="misc-grid">
+                <div class="misc-card">
+                    <div class="misc-card-emoji" aria-hidden="true">🧪</div>
+                    <h3 class="misc-card-title">Experiments</h3>
+                    <p class="misc-card-desc">Prototypes and proof-of-concepts. Not always polished — but always interesting.</p>
+                    <span class="misc-tag">In Progress</span>
+                </div>
+                <div class="misc-card">
+                    <div class="misc-card-emoji" aria-hidden="true">💡</div>
+                    <h3 class="misc-card-title">Ideas</h3>
+                    <p class="misc-card-desc">Notes on things I want to build. Some will become apps. Most will live here forever.</p>
+                    <span class="misc-tag">Notes</span>
+                </div>
+                <div class="misc-card">
+                    <div class="misc-card-emoji" aria-hidden="true">🔧</div>
+                    <h3 class="misc-card-title">Scripts &amp; Tools</h3>
+                    <p class="misc-card-desc">Small utilities that solve exactly one problem — usually mine.</p>
+                    <span class="misc-tag">Utilities</span>
                 </div>
             </div>
         </section>
 
-        <section id="install">
-            <h2>Installation & Sideloading</h2>
-            <p>To maintain advanced features that bypass system restrictions, this application is distributed via IPA. Choose your preferred environment:</p>
-            
-            <div class="install-box">
-                <a href="https://sidestore.io/" class="method-link" target="_blank">
-                    <span><strong>SideStore</strong> (Recommended - No PC required after setup)</span>
-                    <span class="method-tag">BEST</span>
-                </a>
-                <a href="https://altstore.io/" class="method-link" target="_blank">
-                    <span><strong>AltStore</strong> (Reliable - Requires periodic PC sync)</span>
-                </a>
-                <a href="https://sideloadly.io/" class="method-link" target="_blank">
-                    <span><strong>Sideloadly</strong> (Quick desktop-to-device installs)</span>
-                </a>
-                <a href="https://github.com/opa334/TrollStore" class="method-link" target="_blank">
-                    <span><strong>TrollStore</strong> (Permanent - Limited iOS versions)</span>
-                </a>
-            </div>
+    </main>
 
-            <div style="margin-top: 2rem; padding: 1.5rem; background: var(--glass); border-radius: 12px; font-size: 0.9rem;">
-                <strong>Configuration Note:</strong> After installation, navigate to <code>Settings > General > VPN & Device Management</code> to authorize the developer profile on your device.
-            </div>
-        </section>
-
-    </div>
-
-    <footer>
-        <p>&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
-        <p style="font-size: 0.8rem;">Dedicated to building tools that respect user autonomy and accessibility.</p>
+    <!-- ===== FOOTER ===== -->
+    <footer role="contentinfo">
+        <nav aria-label="Legal links">
+            <ul class="footer-nav">
+                <li><a href="accessibility.html">Accessibility Statement</a></li>
+                <li><a href="privacy.html">Privacy Policy</a></li>
+                <li><a href="terms.html">Terms of Service</a></li>
+            </ul>
+        </nav>
+        <p class="footer-copy">&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
     </footer>
 
+    <!-- ===== SCRIPTS ===== -->
     <script>
-        function toggleMenu() {
-            const nav = document.getElementById('navLinks');
-            nav.classList.toggle('active');
-            
-            // Update ARIA label for screen readers
-            const btn = document.querySelector('.menu-toggle');
-            const expanded = nav.classList.contains('active');
-            btn.setAttribute('aria-expanded', expanded);
-            btn.innerText = expanded ? '✕' : '☰';
-        }
+        (function () {
+            'use strict';
+
+            var FOCUSABLE = 'a[href], button:not([disabled]), [tabindex="0"]';
+            var _open = false;
+            var _appsOpen = false;
+            var _lastFocus = null;
+
+            function openDrawer() {
+                _open = true;
+                _lastFocus = document.getElementById('menuBtn');
+
+                var drawer  = document.getElementById('navDrawer');
+                var overlay = document.getElementById('drawerOverlay');
+                var btn     = document.getElementById('menuBtn');
+
+                drawer.classList.add('open');
+                overlay.classList.add('open');
+                overlay.removeAttribute('aria-hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                btn.setAttribute('aria-label', 'Close navigation menu');
+                btn.setAttribute('onclick', 'closeDrawer()');
+
+                document.body.style.overflow = 'hidden';
+                document.addEventListener('keydown', _keyHandler);
+
+                // Move focus to close button after transition starts
+                setTimeout(function () {
+                    var closeBtn = document.getElementById('drawerCloseBtn');
+                    if (closeBtn) closeBtn.focus();
+                }, 50);
+            }
+
+            function closeDrawer() {
+                if (!_open) return;
+                _open = false;
+
+                var drawer  = document.getElementById('navDrawer');
+                var overlay = document.getElementById('drawerOverlay');
+                var btn     = document.getElementById('menuBtn');
+
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                overlay.setAttribute('aria-hidden', 'true');
+                btn.setAttribute('aria-expanded', 'false');
+                btn.setAttribute('aria-label', 'Open navigation menu');
+                btn.setAttribute('onclick', 'openDrawer()');
+
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', _keyHandler);
+
+                if (_lastFocus) _lastFocus.focus();
+            }
+
+            function toggleApps() {
+                _appsOpen = !_appsOpen;
+
+                var accBtn = document.getElementById('appsAccordionBtn');
+                var panel  = document.getElementById('appsPanel');
+
+                accBtn.setAttribute('aria-expanded', _appsOpen ? 'true' : 'false');
+                panel.classList.toggle('open', _appsOpen);
+            }
+
+            function _keyHandler(e) {
+                if (e.key === 'Escape') {
+                    closeDrawer();
+                    return;
+                }
+
+                if (e.key === 'Tab') {
+                    var drawer = document.getElementById('navDrawer');
+                    var els    = Array.prototype.slice.call(drawer.querySelectorAll(FOCUSABLE));
+                    if (els.length === 0) return;
+
+                    var first = els[0];
+                    var last  = els[els.length - 1];
+
+                    if (e.shiftKey) {
+                        if (document.activeElement === first) {
+                            e.preventDefault();
+                            last.focus();
+                        }
+                    } else {
+                        if (document.activeElement === last) {
+                            e.preventDefault();
+                            first.focus();
+                        }
+                    }
+                }
+            }
+
+            // Expose to global scope for inline onclick handlers
+            window.openDrawer  = openDrawer;
+            window.closeDrawer = closeDrawer;
+            window.toggleApps  = toggleApps;
+        }());
     </script>
+
 </body>
 </html>
