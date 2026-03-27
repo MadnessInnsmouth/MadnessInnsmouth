@@ -3,244 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MadnessInnsmouth | Digital Tools & Media</title>
+    <title>MadnessInnsmouth — Apps, Tools &amp; Whatever Else</title>
+    <meta name="description" content="A hobby spot for random apps, miscellaneous tools, and other programs by MadnessInnsmouth.">
+    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #050505;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #007AFF; /* Apple-style Blue */
-            --text-main: #ffffff;
-            --text-dim: #a1a1a1;
-            --success: #34c759;
-        }
-
-        * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
-
-        body {
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            line-height: 1.6;
-        }
-
-        /* --- NAVIGATION & HAMBURGER --- */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 70px;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-            z-index: 1000;
-        }
-
-        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
-
-        .menu-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 10px;
-            z-index: 1001;
-        }
-
-        .nav-links {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 300px;
-            height: 100vh;
-            background: #111;
-            display: flex;
-            flex-direction: column;
-            padding: 5rem 2rem;
-            gap: 1.5rem;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .nav-links.active { right: 0; }
-
-        .nav-links a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 500;
-            padding: 0.8rem;
-            border-radius: 8px;
-        }
-
-        .nav-links a:hover { background: var(--glass); color: var(--accent); }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            padding: 120px 2rem 60px;
-            text-align: center;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .hero h1 { font-size: 4rem; margin: 0; letter-spacing: -2px; line-height: 1.1; }
-        .hero p { color: var(--text-dim); font-size: 1.4rem; max-width: 600px; margin: 1.5rem auto; }
-
-        /* --- CONTENT CARDS --- */
-        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-
-        .project-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .feature-item h3 { color: var(--accent); margin-bottom: 0.5rem; }
-        .feature-item p { font-size: 0.95rem; color: var(--text-dim); }
-
-        /* --- INSTALLATION GUIDE TABLE --- */
-        .install-box {
-            background: #000;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-top: 2rem;
-            border: 1px solid var(--accent);
-        }
-
-        .method-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
-            border-bottom: 1px solid var(--glass-border);
-            text-decoration: none;
-            color: var(--text-main);
-        }
-
-        .method-link:last-child { border-bottom: none; }
-        .method-link:hover { background: var(--glass); }
-        .method-tag { background: var(--accent); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; }
-
-        /* --- FOOTER --- */
-        footer {
-            padding: 4rem 2rem;
-            text-align: center;
-            border-top: 1px solid var(--glass-border);
-            color: var(--text-dim);
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .project-card { padding: 1.5rem; }
-        }
-    </style>
 </head>
 <body>
+    <a href="#main" class="skip-link">Skip to main content</a>
 
-    <nav>
-        <div class="logo">MadnessInnsmouth</div>
-        <button class="menu-toggle" aria-label="Open Menu" onclick="toggleMenu()">☰</button>
-        <div class="nav-links" id="navLinks">
+    <nav aria-label="Primary">
+        <div class="logo"><a href="index.html">MadnessInnsmouth</a></div>
+        <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks" onclick="toggleMenu()">☰</button>
+        <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()" aria-hidden="true"></div>
+        <div class="nav-links" id="navLinks" role="navigation" aria-label="Menu">
             <a href="#projects" onclick="toggleMenu()">Projects</a>
             <a href="#install" onclick="toggleMenu()">Installation</a>
-            <hr style="width: 100%; border: 0; border-top: 1px solid var(--glass-border);">
-            <a href="/accessibility" onclick="toggleMenu()">Accessibility Statement</a>
-            <a href="/privacy" onclick="toggleMenu()">Privacy Policy</a>
-            <a href="/terms" onclick="toggleMenu()">Terms of Service</a>
+            <hr class="nav-divider" aria-hidden="true">
+            <a href="accessibility.html" onclick="toggleMenu()">Accessibility Statement</a>
+            <a href="privacy.html" onclick="toggleMenu()">Privacy Policy</a>
+            <a href="terms.html" onclick="toggleMenu()">Terms of Service</a>
         </div>
     </nav>
 
-    <div class="hero">
-        <h1>Digital Tools. <br><span style="color: var(--accent)">No Compromises.</span></h1>
-        <p>Premium, high-performance applications designed with absolute accessibility as the core foundation.</p>
-    </div>
+    <main id="main">
+        <div class="hero">
+            <h1>Apps, Tools &amp; <br><span style="color: var(--accent)">Whatever Else I Build.</span></h1>
+            <p>A hobby spot for random apps, miscellaneous tools, and other programs I come up with. Nothing fancy — just stuff I make for fun.</p>
+            <span class="update-badge" aria-label="Updates happen when they happen">Updates happen when they happen ✌️</span>
+        </div>
 
-    <div class="container">
-        
-        <section id="projects">
-            <div class="project-card">
-                <h2 style="font-size: 2.5rem; margin-bottom: 0;">Accessible Media Player</h2>
-                <p style="color: var(--accent); font-weight: 600;">iOS • Performance Grade</p>
-                
-                <p>A fully VoiceOver-optimized media engine and document architect. Built for those who require precision control over their library without the friction of mainstream player limitations.</p>
+        <div class="container">
 
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <h3>Audio Mastery</h3>
-                        <p>10-band parametric EQ, independent pitch shifting (±12 semitones), and variable speed (0.25x - 4.0x) without distortion.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>Document Logic</h3>
-                        <p>High-speed rendering for PDF, HTML, and Markdown with native night-mode and custom typeface scaling.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>Zero Friction</h3>
-                        <p>Complete background playback, Now Playing integration, and rapid audio extraction from any video file.</p>
+            <section id="projects" aria-labelledby="projects-heading">
+                <div class="project-card">
+                    <h2 class="project-title" id="projects-heading">Accessible Media Player</h2>
+                    <p class="project-platform">iOS • Performance Grade</p>
+
+                    <p>A fully VoiceOver-optimized media engine and document architect. Built for those who require precision control over their library without the friction of mainstream player limitations.</p>
+
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <h3>Audio Mastery</h3>
+                            <p>10-band parametric EQ, independent pitch shifting (±12 semitones), and variable speed (0.25x – 4.0x) without distortion.</p>
+                        </div>
+                        <div class="feature-item">
+                            <h3>Document Logic</h3>
+                            <p>High-speed rendering for PDF, HTML, and Markdown with native night-mode and custom typeface scaling.</p>
+                        </div>
+                        <div class="feature-item">
+                            <h3>Zero Friction</h3>
+                            <p>Complete background playback, Now Playing integration, and rapid audio extraction from any video file.</p>
+                        </div>
                     </div>
                 </div>
+            </section>
+
+            <section id="install" aria-labelledby="install-heading">
+                <h2 id="install-heading">Installation &amp; Sideloading</h2>
+                <p>To maintain advanced features that bypass system restrictions, this application is distributed via IPA. Choose your preferred environment:</p>
+
+                <div class="install-box" role="list" aria-label="Installation methods">
+                    <a href="https://sidestore.io/" class="method-link" target="_blank" rel="noopener noreferrer" role="listitem">
+                        <span><strong>SideStore</strong> (Recommended – No PC required after setup)</span>
+                        <span class="method-tag">BEST</span>
+                    </a>
+                    <a href="https://altstore.io/" class="method-link" target="_blank" rel="noopener noreferrer" role="listitem">
+                        <span><strong>AltStore</strong> (Reliable – Requires periodic PC sync)</span>
+                    </a>
+                    <a href="https://sideloadly.io/" class="method-link" target="_blank" rel="noopener noreferrer" role="listitem">
+                        <span><strong>Sideloadly</strong> (Quick desktop-to-device installs)</span>
+                    </a>
+                    <a href="https://github.com/opa334/TrollStore" class="method-link" target="_blank" rel="noopener noreferrer" role="listitem">
+                        <span><strong>TrollStore</strong> (Permanent – Limited iOS versions)</span>
+                    </a>
+                </div>
+
+                <div class="config-note">
+                    <strong>Configuration Note:</strong> After installation, navigate to <code>Settings &gt; General &gt; VPN &amp; Device Management</code> to authorize the developer profile on your device.
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer role="contentinfo">
+        <nav aria-label="Footer">
+            <div class="footer-links">
+                <a href="accessibility.html">Accessibility Statement</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
             </div>
-        </section>
-
-        <section id="install">
-            <h2>Installation & Sideloading</h2>
-            <p>To maintain advanced features that bypass system restrictions, this application is distributed via IPA. Choose your preferred environment:</p>
-            
-            <div class="install-box">
-                <a href="https://sidestore.io/" class="method-link" target="_blank">
-                    <span><strong>SideStore</strong> (Recommended - No PC required after setup)</span>
-                    <span class="method-tag">BEST</span>
-                </a>
-                <a href="https://altstore.io/" class="method-link" target="_blank">
-                    <span><strong>AltStore</strong> (Reliable - Requires periodic PC sync)</span>
-                </a>
-                <a href="https://sideloadly.io/" class="method-link" target="_blank">
-                    <span><strong>Sideloadly</strong> (Quick desktop-to-device installs)</span>
-                </a>
-                <a href="https://github.com/opa334/TrollStore" class="method-link" target="_blank">
-                    <span><strong>TrollStore</strong> (Permanent - Limited iOS versions)</span>
-                </a>
-            </div>
-
-            <div style="margin-top: 2rem; padding: 1.5rem; background: var(--glass); border-radius: 12px; font-size: 0.9rem;">
-                <strong>Configuration Note:</strong> After installation, navigate to <code>Settings > General > VPN & Device Management</code> to authorize the developer profile on your device.
-            </div>
-        </section>
-
-    </div>
-
-    <footer>
-        <p>&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
-        <p style="font-size: 0.8rem;">Dedicated to building tools that respect user autonomy and accessibility.</p>
+        </nav>
+        <p class="footer-copy">&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
+        <p class="footer-tagline">Made for fun. Accessibility always comes first.</p>
     </footer>
 
     <script>
         function toggleMenu() {
             const nav = document.getElementById('navLinks');
-            nav.classList.toggle('active');
-            
-            // Update ARIA label for screen readers
+            const overlay = document.getElementById('navOverlay');
             const btn = document.querySelector('.menu-toggle');
-            const expanded = nav.classList.contains('active');
+            const isOpen = nav.classList.contains('active');
+
+            nav.classList.toggle('active');
+            overlay.classList.toggle('active');
+
+            const expanded = !isOpen;
             btn.setAttribute('aria-expanded', expanded);
+            btn.setAttribute('aria-label', expanded ? 'Close menu' : 'Open menu');
             btn.innerText = expanded ? '✕' : '☰';
+
+            if (expanded) {
+                nav.querySelector('a').focus();
+            }
         }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const nav = document.getElementById('navLinks');
+                if (nav.classList.contains('active')) {
+                    toggleMenu();
+                    document.querySelector('.menu-toggle').focus();
+                }
+            }
+        });
     </script>
 </body>
 </html>
