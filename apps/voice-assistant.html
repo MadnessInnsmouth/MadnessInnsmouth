@@ -111,31 +111,14 @@
             Say <strong>"Hey Nova"</strong> to activate hands-free.
           </p>
 
-          <h2>Setup</h2>
-
-          <h3>Requirements</h3>
-          <ul>
-            <li>Windows 10/11</li>
-            <li>Python 3.10+</li>
-            <li>A Gemini API key (free at <a href="https://aistudio.google.com/apikey" rel="external noopener">aistudio.google.com/apikey</a>)</li>
-            <li>Microphone</li>
-          </ul>
-
-          <h3>Install</h3>
-          <pre><code># Clone the repo
-git clone https://github.com/demon-of-fire/nova-voice-assistant.git
-cd nova-voice-assistant
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run
-python main.py</code></pre>
-          <p>On first launch, Nova will ask for your Gemini API key.</p>
-
-          <h3>Build Standalone EXE</h3>
-          <pre><code>python build.py</code></pre>
-          <p>Creates <code>Nova.exe</code> in the project folder — no Python needed to run it.</p>
+          <h2>Download</h2>
+          <p>
+            Download the latest <strong>Nova.exe</strong> from the
+            <a href="https://github.com/demon-of-fire/nova-voice-assistant/releases" rel="external noopener">
+              GitHub Releases page
+            </a>.
+            No Python or installation required — just run the executable.
+          </p>
 
           <h2>Settings</h2>
           <p>Open Settings (<kbd>F4</kbd>) to configure:</p>
@@ -150,33 +133,6 @@ python main.py</code></pre>
             <li><strong>Dark/Light Mode</strong></li>
             <li><strong>Orb Position</strong> — Bottom-right, bottom-left, top-right, top-left</li>
           </ul>
-
-          <h2>Architecture</h2>
-          <pre><code>main.py              — Entry point, API key dialog
-config.py            — All constants and system prompt
-assistant/
-  core.py            — Orchestrator (listen -> think -> speak loop)
-  brain.py           — Gemini + Ollama AI routing
-  listener.py        — Speech recognition + wake word detection
-  speaker.py         — Edge TTS neural voices + pyttsx3 fallback
-  ui.py              — Tkinter UI (NVDA accessible)
-  settings.py        — Persistent settings with API key obfuscation
-  accessibility.py   — NVDA announcement helpers
-  tray.py            — System tray icon
-  sounds.py          — Sound effects
-actions/
-  apps.py            — Launch/close apps
-  windows.py         — Window management
-  input_control.py   — Keyboard/mouse control
-  system.py          — Volume, brightness, power, media controls
-  web.py             — Web search, quick search, URLs
-  files.py           — File/folder operations
-  filesystem.py      — Read/write/edit files
-  shell.py           — Shell commands, winget
-  process.py         — Process management
-  network.py         — Network info, WiFi, ping
-  code.py            — Python execution
-  confirmation.py    — Confirmation dialogs</code></pre>
 
         </article>
 
@@ -207,19 +163,6 @@ actions/
               <li>License: MIT</li>
               <li>Status: Available</li>
             </ul>
-          </div>
-
-          <div class="sidebar-card">
-            <h3>Tags</h3>
-            <div class="card-tags" style="margin-top:0;">
-              <span class="tag tag-accent">Accessibility</span>
-              <span class="tag">Voice Control</span>
-              <span class="tag">Windows</span>
-              <span class="tag">Screen Reader</span>
-              <span class="tag">Google Gemini</span>
-              <span class="tag">Python</span>
-              <span class="tag">NVDA</span>
-            </div>
           </div>
 
         </aside>
