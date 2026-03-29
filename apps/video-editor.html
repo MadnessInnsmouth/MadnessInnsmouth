@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Accessible Video Editor for Windows by Demon of Fire – keyboard and screen-reader first video editing." />
+  <title>Accessible Video Editor – Demon of Fire</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+    <div class="container">
+      <a href="../index.html" class="nav-brand">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        Demon of Fire
+      </a>
+
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        aria-controls="nav-links"
+        aria-expanded="false"
+        aria-label="Open navigation menu"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <ul id="nav-links" class="nav-links" role="list">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../apps.html" aria-current="page">Apps</a></li>
+        <li><a href="../game-mods.html">Game Mods</a></li>
+        <li><a href="../misc-tools.html">Misc Tools</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <div class="container">
+
+      <!-- Back link -->
+      <a href="../apps.html" class="back-link">Back to Apps</a>
+
+      <!-- Project hero -->
+      <header class="project-hero" aria-labelledby="project-heading">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+          <div class="card-icon" style="font-size:2.5rem; width:64px; height:64px;" aria-hidden="true">🎬</div>
+          <div>
+            <h1 id="project-heading">Accessible Video Editor</h1>
+            <span class="card-platform" style="font-size:0.85rem;">Windows</span>
+          </div>
+        </div>
+        <p style="font-size:1.05rem; color:var(--color-text-muted); max-width:65ch;">
+          A video editor for Windows designed from the ground up to be fully
+          operable with a keyboard and screen reader. Edit, trim, cut, and
+          export video without ever needing a mouse.
+        </p>
+        <div class="project-meta" aria-label="Project metadata">
+          <span class="meta-badge">🖥️ Windows</span>
+          <span class="meta-badge">♿ Screen-Reader Compatible</span>
+          <span class="meta-badge">⌨️ Keyboard First</span>
+        </div>
+      </header>
+
+      <!-- Main two-column layout -->
+      <div class="project-body">
+
+        <!-- Left: project content -->
+        <article class="project-content" aria-labelledby="project-heading">
+
+          <div class="notice notice-info" role="note" aria-label="Placeholder notice">
+            <span class="notice-icon" aria-hidden="true">📋</span>
+            <p>
+              Full project details, screenshots, and documentation will be added
+              here soon. The README and feature list are placeholder content and
+              will be replaced with real project information.
+            </p>
+          </div>
+
+          <h2>About This Project</h2>
+          <p>
+            Accessible Video Editor is the first video editor built with blind
+            and low-vision users in mind as a primary audience. Most video
+            editors are graphically intensive and nearly impossible to use with
+            a screen reader — this project changes that.
+          </p>
+          <p>
+            Every control is reachable by keyboard, every timeline event is
+            announced by the screen reader, and the UI uses high-contrast modes
+            compatible with Windows accessibility features.
+          </p>
+
+          <h2>Features</h2>
+          <ul>
+            <li>100% keyboard navigable interface</li>
+            <li>Full NVDA, JAWS, and Narrator support via Windows UIA</li>
+            <li>Audio-described timeline — hear clip positions and lengths</li>
+            <li>Keyboard shortcuts for all editing operations</li>
+            <li>Cut, trim, split, merge, and export clips</li>
+            <li>Audio waveform editing with screen-reader announcements</li>
+            <li>High-contrast mode and system theme support</li>
+            <li>Export to common formats (MP4, MKV, WebM)</li>
+          </ul>
+
+          <h2>Keyboard Shortcuts</h2>
+          <ul>
+            <li><code>Space</code> — Play / Pause</li>
+            <li><code>←</code> / <code>→</code> — Step back / forward one frame</li>
+            <li><code>Shift + ←/→</code> — Step back / forward 5 seconds</li>
+            <li><code>I</code> — Set in-point (start of selection)</li>
+            <li><code>O</code> — Set out-point (end of selection)</li>
+            <li><code>Delete</code> — Remove selected clip or region</li>
+            <li><code>Ctrl + E</code> — Open export dialog</li>
+            <li><code>Ctrl + Z</code> / <code>Ctrl + Y</code> — Undo / Redo</li>
+          </ul>
+
+          <h2>System Requirements</h2>
+          <ul>
+            <li>Windows 10 or Windows 11</li>
+            <li>Minimum 4 GB RAM (8 GB recommended for HD editing)</li>
+            <li>.NET 6 Runtime (bundled with installer)</li>
+            <li>FFmpeg (bundled)</li>
+          </ul>
+
+          <h2>Installation</h2>
+          <p>
+            Download the installer from the link in the sidebar. The setup
+            wizard is fully keyboard accessible and announces every step via
+            Windows accessibility APIs.
+          </p>
+
+          <h2>Accessibility Notes</h2>
+          <p>
+            Accessible Video Editor is tested regularly against NVDA, JAWS, and
+            Windows Narrator. All timeline elements expose their position,
+            duration, and type to assistive technology. The application supports
+            Windows High Contrast Mode.
+          </p>
+          <p>
+            Accessibility bug reports are a priority. If you find something that
+            doesn't work with your screen reader, please file an issue on the
+            project repository.
+          </p>
+
+        </article>
+
+        <!-- Right: sidebar -->
+        <aside class="project-sidebar" aria-label="Project information">
+
+          <div class="sidebar-card">
+            <h3>Download</h3>
+            <ul class="sidebar-links" role="list">
+              <li>
+                <a href="#" aria-label="Download Accessible Video Editor installer (coming soon)">
+                  ⬇️ Download Installer
+                </a>
+              </li>
+              <li>
+                <a href="#" aria-label="View source code on GitHub (coming soon)">
+                  🔗 Source Code
+                </a>
+              </li>
+              <li>
+                <a href="#" aria-label="Read full documentation (coming soon)">
+                  📖 Documentation
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>Details</h3>
+            <ul class="sidebar-list" role="list">
+              <li>Platform: Windows 10/11</li>
+              <li>Language: C# / .NET</li>
+              <li>License: TBD</li>
+              <li>Status: In Development</li>
+            </ul>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>Tags</h3>
+            <div class="card-tags" style="margin-top:0;">
+              <span class="tag tag-accent">Accessibility</span>
+              <span class="tag">Video Editing</span>
+              <span class="tag">Windows</span>
+              <span class="tag">Screen Reader</span>
+              <span class="tag">Keyboard</span>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="../index.html" class="footer-brand">Demon of Fire</a>
+        <nav aria-label="Footer navigation">
+          <ul class="footer-links" role="list">
+            <li><a href="../accessibility.html">Accessibility Statement</a></li>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </nav>
+        <p class="footer-copy">
+          &copy; <span id="current-year">2024</span> Demon of Fire. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

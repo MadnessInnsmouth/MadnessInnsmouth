@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Voice Assistant for Windows by Demon of Fire – fully accessible voice-control software." />
+  <title>Voice Assistant – Demon of Fire</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+    <div class="container">
+      <a href="../index.html" class="nav-brand">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        Demon of Fire
+      </a>
+
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        aria-controls="nav-links"
+        aria-expanded="false"
+        aria-label="Open navigation menu"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <ul id="nav-links" class="nav-links" role="list">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../apps.html" aria-current="page">Apps</a></li>
+        <li><a href="../game-mods.html">Game Mods</a></li>
+        <li><a href="../misc-tools.html">Misc Tools</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <div class="container">
+
+      <!-- Back link -->
+      <a href="../apps.html" class="back-link">Back to Apps</a>
+
+      <!-- Project hero -->
+      <header class="project-hero" aria-labelledby="project-heading">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+          <div class="card-icon" style="font-size:2.5rem; width:64px; height:64px;" aria-hidden="true">🎙️</div>
+          <div>
+            <h1 id="project-heading">Voice Assistant</h1>
+            <span class="card-platform" style="font-size:0.85rem;">Windows</span>
+          </div>
+        </div>
+        <p style="font-size:1.05rem; color:var(--color-text-muted); max-width:65ch;">
+          A fully accessible voice assistant for Windows that lets you control
+          your desktop, launch applications, dictate text, and more — entirely
+          by voice. Works seamlessly with NVDA, JAWS, and Windows Narrator.
+        </p>
+        <div class="project-meta" aria-label="Project metadata">
+          <span class="meta-badge">🖥️ Windows</span>
+          <span class="meta-badge">♿ Screen-Reader Compatible</span>
+          <span class="meta-badge">🎙️ Voice Control</span>
+        </div>
+      </header>
+
+      <!-- Main two-column layout -->
+      <div class="project-body">
+
+        <!-- Left: project content -->
+        <article class="project-content" aria-labelledby="project-heading">
+
+          <div class="notice notice-info" role="note" aria-label="Placeholder notice">
+            <span class="notice-icon" aria-hidden="true">📋</span>
+            <p>
+              Full project details, screenshots, and documentation will be added
+              here soon. The README and feature list are placeholder content and
+              will be replaced with real project information.
+            </p>
+          </div>
+
+          <h2>About This Project</h2>
+          <p>
+            Voice Assistant is a desktop application for Windows designed with
+            accessibility as its primary goal. Whether you have limited mobility,
+            a visual impairment, or simply prefer a hands-free workflow, Voice
+            Assistant provides a natural way to interact with your computer.
+          </p>
+          <p>
+            The application is fully compatible with popular Windows screen
+            readers and announces all actions and responses via your preferred
+            assistive technology.
+          </p>
+
+          <h2>Features</h2>
+          <ul>
+            <li>Fully operable via keyboard and screen reader</li>
+            <li>Compatible with NVDA, JAWS, and Windows Narrator</li>
+            <li>Voice-controlled desktop navigation</li>
+            <li>Application launching by voice command</li>
+            <li>Text dictation across any input field</li>
+            <li>Customisable wake word and command set</li>
+            <li>Low-latency local processing — no cloud dependency</li>
+            <li>Detailed audio and visual feedback for every action</li>
+          </ul>
+
+          <h2>System Requirements</h2>
+          <ul>
+            <li>Windows 10 or Windows 11</li>
+            <li>Microphone (built-in or external)</li>
+            <li>Minimum 4 GB RAM recommended</li>
+            <li>.NET 6 Runtime (bundled with installer)</li>
+          </ul>
+
+          <h2>Installation</h2>
+          <p>
+            Download the installer from the link in the sidebar. Run the setup
+            wizard and follow the on-screen instructions. The installer is fully
+            navigable by keyboard and screen reader.
+          </p>
+
+          <h2>Accessibility Notes</h2>
+          <p>
+            Every control in Voice Assistant has a descriptive accessible name
+            and role. The application uses Windows UIA (UI Automation) so that
+            screen readers receive live updates as the assistant responds to
+            commands.
+          </p>
+          <p>
+            If you encounter any accessibility barrier, please open an issue
+            on the project repository.
+          </p>
+
+        </article>
+
+        <!-- Right: sidebar -->
+        <aside class="project-sidebar" aria-label="Project information">
+
+          <div class="sidebar-card">
+            <h3>Download</h3>
+            <ul class="sidebar-links" role="list">
+              <li>
+                <a href="#" aria-label="Download Voice Assistant installer (coming soon)">
+                  ⬇️ Download Installer
+                </a>
+              </li>
+              <li>
+                <a href="#" aria-label="View source code on GitHub (coming soon)">
+                  🔗 Source Code
+                </a>
+              </li>
+              <li>
+                <a href="#" aria-label="Read full documentation (coming soon)">
+                  📖 Documentation
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>Details</h3>
+            <ul class="sidebar-list" role="list">
+              <li>Platform: Windows 10/11</li>
+              <li>Language: C# / .NET</li>
+              <li>License: TBD</li>
+              <li>Status: In Development</li>
+            </ul>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>Tags</h3>
+            <div class="card-tags" style="margin-top:0;">
+              <span class="tag tag-accent">Accessibility</span>
+              <span class="tag">Voice Control</span>
+              <span class="tag">Windows</span>
+              <span class="tag">Screen Reader</span>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="../index.html" class="footer-brand">Demon of Fire</a>
+        <nav aria-label="Footer navigation">
+          <ul class="footer-links" role="list">
+            <li><a href="../accessibility.html">Accessibility Statement</a></li>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </nav>
+        <p class="footer-copy">
+          &copy; <span id="current-year">2024</span> Demon of Fire. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

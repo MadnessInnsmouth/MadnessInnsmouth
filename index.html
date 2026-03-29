@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Demon of Fire – developer of accessible Windows apps, game mods, and tools." />
+  <title>Demon of Fire – Developer Portfolio</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Skip navigation for screen readers -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- ── Navigation ── -->
+  <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        Demon of Fire
+      </a>
+
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        aria-controls="nav-links"
+        aria-expanded="false"
+        aria-label="Open navigation menu"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <ul id="nav-links" class="nav-links" role="list">
+        <li><a href="index.html" aria-current="page">Home</a></li>
+        <li><a href="apps.html">Apps</a></li>
+        <li><a href="game-mods.html">Game Mods</a></li>
+        <li><a href="misc-tools.html">Misc Tools</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <main id="main-content">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="hero" aria-labelledby="hero-heading">
+        <span class="label" aria-hidden="true">Independent Developer</span>
+        <h1 id="hero-heading">Demon of Fire</h1>
+        <p>
+          Crafting accessible Windows apps, game mods, and developer tools.
+          Every project is built with usability and screen-reader accessibility
+          as a first-class concern.
+        </p>
+        <div class="btn-group">
+          <a href="apps.html" class="btn btn-primary">Browse Apps</a>
+          <a href="game-mods.html" class="btn btn-ghost">Game Mods</a>
+        </div>
+      </section>
+
+      <!-- Navigation overview cards -->
+      <section aria-labelledby="sections-heading">
+        <h2 class="section-title" id="sections-heading">Explore</h2>
+
+        <div class="nav-cards">
+
+          <a href="apps.html" class="nav-card" aria-label="Apps – Windows accessibility tools and utilities">
+            <span class="nav-card-icon" aria-hidden="true">🖥️</span>
+            <span class="nav-card-title">Apps</span>
+            <p class="nav-card-desc">
+              Accessible Windows desktop applications, including a voice
+              assistant and a fully accessible video editor.
+            </p>
+          </a>
+
+          <a href="game-mods.html" class="nav-card" aria-label="Game Mods – modifications and patches for popular games">
+            <span class="nav-card-icon" aria-hidden="true">🎮</span>
+            <span class="nav-card-title">Game Mods</span>
+            <p class="nav-card-desc">
+              Modifications, patches, and quality-of-life improvements for
+              popular games. Placeholder for upcoming mods.
+            </p>
+          </a>
+
+          <a href="misc-tools.html" class="nav-card" aria-label="Miscellaneous Tools – scripts and utilities">
+            <span class="nav-card-icon" aria-hidden="true">🔧</span>
+            <span class="nav-card-title">Misc Tools</span>
+            <p class="nav-card-desc">
+              One-off scripts, small utilities, and other projects that don't
+              fit neatly into a category.
+            </p>
+          </a>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="index.html" class="footer-brand">Demon of Fire</a>
+        <nav aria-label="Footer navigation">
+          <ul class="footer-links" role="list">
+            <li><a href="accessibility.html">Accessibility Statement</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </nav>
+        <p class="footer-copy">
+          &copy; <span id="current-year">2024</span> Demon of Fire. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
