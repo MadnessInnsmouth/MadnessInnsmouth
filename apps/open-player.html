@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Open Player – a fully VoiceOver-accessible media player and document viewer for iPhone and iPad, by MadnessInnsmouth." />
+  <title>Open Player (iOS) – MadnessInnsmouth</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <nav id="site-nav" class="site-nav" aria-label="Main navigation">
+    <div class="container">
+      <a href="../index.html" class="nav-brand">
+        MadnessInnsmouth
+      </a>
+
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        aria-controls="nav-links"
+        aria-expanded="false"
+        aria-label="Open navigation menu"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <ul id="nav-links" class="nav-links" role="list">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../apps.html" aria-current="page">Apps</a></li>
+        <li><a href="../games.html">Games</a></li>
+        <li><a href="../misc-tools.html">Misc Tools</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+    <div class="container">
+
+      <!-- Back link -->
+      <a href="../apps.html" class="back-link">Back to Apps</a>
+
+      <!-- Project hero -->
+      <header class="project-hero" aria-labelledby="project-heading">
+        <div>
+          <h1 id="project-heading">Open Player</h1>
+          <span class="card-platform" style="font-size:0.85rem;">iOS</span>
+        </div>
+        <p style="font-size:1.05rem; color:var(--color-text-muted); max-width:65ch; margin-top:0.75rem;">
+          A fully VoiceOver-accessible media player and document viewer for
+          iPhone and iPad. Handles local files, online streams, playlists,
+          and a wide range of document formats — all without ever needing
+          a mouse.
+        </p>
+        <div class="project-meta" aria-label="Project metadata">
+          <span class="meta-badge">iOS</span>
+          <span class="meta-badge">VoiceOver Compatible</span>
+          <span class="meta-badge">AirPlay</span>
+          <span class="meta-badge">Dynamic Type</span>
+        </div>
+      </header>
+
+      <!-- Main two-column layout -->
+      <div class="project-body">
+
+        <!-- Left: project content -->
+        <article class="project-content">
+
+          <h2>Media Playback</h2>
+          <p>
+            Open Player handles virtually any audio or video you throw at it —
+            local files from your library or remote streams from the internet.
+          </p>
+          <ul>
+            <li><strong>Audio formats</strong> — MP3, FLAC, AAC, M4A, ALAC, WAV, and more</li>
+            <li><strong>Video formats</strong> — MP4, MOV, MKV, AVI, and more</li>
+            <li><strong>Online streams</strong> — HLS playlists, HTTP MP4s, and MP3 streams</li>
+            <li><strong>Custom skip amounts</strong> — jump back or forward by 5, 10, 15, 30, 60, 90, or 120 seconds, configurable to your preference</li>
+            <li><strong>Playback speed</strong> — from 0.25× to 4× with no pitch distortion</li>
+            <li><strong>Pitch shift</strong> — raise or lower pitch by up to 12 semitones, independently of speed</li>
+            <li><strong>Shuffle and Repeat</strong> — Off, Repeat All, or Repeat One</li>
+          </ul>
+
+          <h2>Audio Quality</h2>
+          <p>
+            Every track goes through a professional-grade signal chain built
+            on Apple's native audio engine.
+          </p>
+          <ul>
+            <li><strong>10-band equalizer</strong> — shape your sound from 32 Hz all the way to 16 kHz, with ±12 dB per band and built-in presets: Flat, Bass Boost, Treble Boost, Vocal, Classical, Jazz, Rock, Electronic, Podcast, and Custom</li>
+            <li><strong>Output gain</strong> — boost quiet tracks or compensate for headphones, up to 200%</li>
+            <li><strong>High-quality time-stretching</strong> — speed changes sound natural, not chipmunk-like</li>
+            <li><strong>Spatial audio and Dolby Atmos passthrough</strong> — on supported devices</li>
+          </ul>
+
+          <h2>Playlists and Queue</h2>
+          <ul>
+            <li>Create and name your own playlists</li>
+            <li>Drag to reorder tracks inside a playlist</li>
+            <li>Manage the playback queue on the fly — reorder or remove tracks without stopping playback</li>
+          </ul>
+
+          <h2>Background Playback and System Integration</h2>
+          <ul>
+            <li><strong>Background playback</strong> — audio keeps going when you lock the screen or switch apps</li>
+            <li><strong>Lock Screen and Control Centre</strong> — full Now Playing card with album art, a scrubbing bar, and skip buttons</li>
+            <li><strong>AirPlay</strong> — send audio to Apple TV, HomePod, or any Bluetooth or AirPlay speaker</li>
+          </ul>
+
+          <h2>Audio Extraction from Video</h2>
+          <p>
+            Pull the audio track out of any video file and save it as a
+            standalone audio file.
+          </p>
+          <ul>
+            <li>Output formats: M4A (AAC), WAV (uncompressed), or ALAC (lossless)</li>
+            <li>Progress bar with cancel support</li>
+            <li>Share the result or add it straight to your library</li>
+          </ul>
+
+          <h2>Document Viewer</h2>
+          <p>
+            Open Player doubles as a document viewer, supporting a wide range
+            of file types so you can read anything without a separate app.
+          </p>
+          <ul>
+            <li><strong>PDF</strong> — native text selection, search, single-page, continuous scroll, or two-page layout, plus a night mode</li>
+            <li><strong>HTML / XHTML</strong> — clean reader view with adjustable font, size, line spacing, and theme</li>
+            <li><strong>Plain text and Markdown</strong> — selectable text with native rendering</li>
+            <li><strong>RTF</strong> — fully rendered rich text</li>
+            <li><strong>Word (DOCX) and ePub</strong> — opened through the system's Quick Look engine for accurate formatting</li>
+          </ul>
+
+          <h2>Accessibility</h2>
+          <p>
+            Open Player was designed from the ground up to work beautifully
+            with VoiceOver. Every single control has a label, a hint, and a
+            value so you always know exactly what you're touching.
+          </p>
+          <ul>
+            <li>Every button, slider, and list row is fully labelled for VoiceOver</li>
+            <li>Progress sliders respond to VoiceOver's swipe-up / swipe-down adjustments — no dragging required</li>
+            <li><strong>Dynamic Type</strong> — all text scales with your system font-size setting</li>
+            <li>High-contrast colours throughout; no information is conveyed by colour alone</li>
+            <li>Related items are grouped cleanly so VoiceOver reads them together rather than item by item</li>
+            <li>A <strong>VoiceOver Tips</strong> screen in Settings walks you through all the custom gestures</li>
+          </ul>
+
+        </article>
+
+        <!-- Right: sidebar -->
+        <aside class="project-sidebar" aria-label="Project information">
+
+          <div class="sidebar-card">
+            <h3>Download</h3>
+            <ul class="sidebar-links" role="list">
+              <li>
+                <a href="https://github.com/MadnessInnsmouth/OpenPlayer/releases" rel="external noopener" aria-label="Download Open Player from GitHub Releases">
+                  Download IPA from GitHub
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/MadnessInnsmouth/OpenPlayer" rel="external noopener" aria-label="View Open Player source code on GitHub">
+                  Source Code on GitHub
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>Details</h3>
+            <ul class="sidebar-list" role="list">
+              <li>Platform: iPhone &amp; iPad</li>
+              <li>Language: Swift / SwiftUI</li>
+              <li>License: MIT</li>
+              <li>Status: Available</li>
+            </ul>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="../index.html" class="footer-brand">MadnessInnsmouth</a>
+        <nav aria-label="Footer navigation">
+          <ul class="footer-links" role="list">
+            <li><a href="../accessibility.html">Accessibility Statement</a></li>
+            <li><a href="../privacy.html">Privacy Policy</a></li>
+            <li><a href="../terms.html">Terms of Service</a></li>
+          </ul>
+        </nav>
+        <p class="footer-copy">
+          &copy; <span id="current-year">2024</span> MadnessInnsmouth. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

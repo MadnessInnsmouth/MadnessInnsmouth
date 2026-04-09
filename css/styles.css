@@ -525,7 +525,7 @@ main {
   color: var(--color-text);
 }
 .back-link::before {
-  content: '←';
+  content: '←' / '';
 }
 
 .project-meta {
@@ -801,6 +801,7 @@ main {
 }
 
 .nav-card-desc {
+  display: block;
   font-size: 0.88rem;
   color: var(--color-text-muted);
   max-width: none;
