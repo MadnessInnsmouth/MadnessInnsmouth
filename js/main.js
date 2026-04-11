@@ -1,5 +1,5 @@
 /* ============================================================
-   Demon of Fire – Portfolio Website
+   MadnessInnsmouth – Portfolio Website
    main.js
    ============================================================ */
 
