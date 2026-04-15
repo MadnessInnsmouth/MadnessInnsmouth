@@ -270,6 +270,11 @@ header[role="banner"] .container {
     outline-offset: -2px;
 }
 
+.nav-menu > li > a[aria-current="page"] {
+    background-color: #333333;
+    font-weight: 600;
+}
+
 /* ===== Apps Submenu Toggle Button ===== */
 .nav-submenu-toggle {
     width: 100%;
@@ -543,16 +548,20 @@ header[role="banner"] .container {
     margin-bottom: 1rem;
 }
 
+.app-card h2,
 .app-card h3 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
 }
 
+.app-card h2 a,
 .app-card h3 a {
     color: #1a1a1a;
     text-decoration: none;
 }
 
+.app-card h2 a:hover,
+.app-card h2 a:focus,
 .app-card h3 a:hover,
 .app-card h3 a:focus {
     color: #0066cc;
@@ -560,6 +569,11 @@ header[role="banner"] .container {
     background-color: transparent;
     outline: 2px solid #0066cc;
     outline-offset: 2px;
+}
+
+.app-card .btn {
+    margin-top: 1.25rem;
+    align-self: flex-start;
 }
 
 .app-card p {
@@ -607,6 +621,82 @@ header[role="banner"] .container {
     margin-bottom: 0.875rem;
 }
 
+
+/* ===== Category Cards (Homepage) ===== */
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 0 0 3rem;
+}
+
+.category-card {
+    display: block;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    text-decoration: none;
+    border: 2px solid transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .category-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+}
+
+.category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.category-card:focus {
+    color: #ffffff;
+    text-decoration: none;
+    outline: 3px solid #0066cc;
+    outline-offset: 3px;
+}
+
+.category-card:visited {
+    color: #ffffff;
+}
+
+.category-card-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1.25rem;
+}
+
+.category-card h2 {
+    color: #ffffff;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-card p {
+    color: #aaaaaa;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin-bottom: 0;
+}
+
+.category-cta {
+    display: block;
+    margin-top: 1.75rem;
+    color: #6cb4ff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.25px;
+}
+
+@media (max-width: 600px) {
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
 /* ===== CTA Section ===== */
 .cta-section {
@@ -795,6 +885,53 @@ header[role="banner"] .container {
         grid-template-columns: 1fr 1fr;
         display: grid;
     }
+}
+
+/* ===== Game Featured Card ===== */
+.game-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    max-width: 680px;
+    margin: 1.5rem auto 0;
+}
+
+.game-card-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.game-card h2 {
+    font-size: 2rem;
+    margin-bottom: 0.4rem;
+}
+
+.game-card h2 a {
+    color: #1a1a1a;
+    text-decoration: none;
+}
+
+.game-card h2 a:hover,
+.game-card h2 a:focus {
+    color: #0066cc;
+    text-decoration: underline;
+    background-color: transparent;
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
+.game-card p {
+    font-size: 1rem;
+    color: #555555;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+.game-card .stats-row {
+    margin: 0 0 1.75rem;
 }
 
 /* ===== Tables ===== */

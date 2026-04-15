@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MadnessInnsmouth</title>
-    <meta name="description" content="Apps and tools by MadnessInnsmouth — iOS, Windows, and whatever comes next.">
+    <meta name="description" content="Independent apps and games by MadnessInnsmouth. Free to download, no accounts required.">
+    <meta property="og:title" content="MadnessInnsmouth">
+    <meta property="og:description" content="Independent apps and games. Free to download, no accounts required.">
+    <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MadnessInnsmouth",
+      "description": "Independent apps and games by MadnessInnsmouth."
+    }
+    </script>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -20,47 +31,8 @@
             </button>
             <nav id="main-navigation" aria-label="Main navigation">
                 <ul class="nav-menu">
-                    <li>
-                        <button
-                            class="nav-submenu-toggle"
-                            id="apps-toggle"
-                            aria-expanded="false"
-                            aria-controls="apps-submenu"
-                        >
-                            Apps
-                            <span class="nav-chevron" aria-hidden="true"></span>
-                        </button>
-                        <ul class="nav-submenu" id="apps-submenu" role="list" aria-label="Apps">
-                            <li role="listitem">
-                                <a href="apps/accessible-media-player.html" class="submenu-app-link">
-                                    <span class="submenu-app-icon" aria-hidden="true">🎵</span>
-                                    <span class="submenu-app-content">
-                                        <span class="submenu-app-name">Accessible Media Player</span>
-                                        <span class="submenu-app-desc">iOS &middot; Audio &amp; Documents</span>
-                                    </span>
-                                </a>
-                            </li>
-                            <li role="listitem">
-                                <a href="apps/speechpad.html" class="submenu-app-link">
-                                    <span class="submenu-app-icon" aria-hidden="true">🎙️</span>
-                                    <span class="submenu-app-content">
-                                        <span class="submenu-app-name">SpeechPad</span>
-                                        <span class="submenu-app-desc">Windows &middot; Speech-to-Text</span>
-                                    </span>
-                                </a>
-                            </li>
-                            <li role="listitem">
-                                <a href="apps/football-director.html" class="submenu-app-link">
-                                    <span class="submenu-app-icon" aria-hidden="true">⚽</span>
-                                    <span class="submenu-app-content">
-                                        <span class="submenu-app-name">Football Director</span>
-                                        <span class="submenu-app-desc">Windows &middot; Management Game</span>
-                                    </span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li><a href="#misc">Miscellaneous</a></li>
+                    <li><a href="apps.html">Apps</a></li>
+                    <li><a href="games.html">Games</a></li>
                 </ul>
             </nav>
         </div>
@@ -72,76 +44,24 @@
             <header class="hero-section">
                 <h1>MadnessInnsmouth</h1>
                 <p class="hero-description">
-                    Independent apps and tools. iOS, Windows, and whatever comes next.
+                    Independent apps and games. Built by one person, free to use.
                 </p>
-                <div class="hero-actions">
-                    <a href="#apps" class="btn btn-primary">Browse Apps</a>
-                    <a href="#misc" class="btn btn-secondary">Miscellaneous</a>
-                </div>
             </header>
 
-            <section id="apps" aria-labelledby="apps-heading">
-                <div class="section-header">
-                    <h2 id="apps-heading">Apps</h2>
-                </div>
-                <div class="apps-grid">
-
-                    <article class="app-card">
-                        <div class="app-card-icon" aria-hidden="true">🎵</div>
-                        <h3><a href="apps/accessible-media-player.html">Accessible Media Player</a></h3>
-                        <p>
-                            A precise audio and document player for iOS. Parametric <abbr title="Equaliser">EQ</abbr>,
-                            pitch shifting, variable speed, and deep system integration.
-                        </p>
-                        <p class="app-card-platform">iOS &middot; Audio &amp; Documents</p>
-                    </article>
-
-                    <article class="app-card">
-                        <div class="app-card-icon" aria-hidden="true">🎙️</div>
-                        <h3><a href="apps/speechpad.html">SpeechPad</a></h3>
-                        <p>
-                            Speech-to-text that runs entirely on your machine.
-                            Local <abbr title="Artificial Intelligence">AI</abbr>, no cloud, no accounts.
-                        </p>
-                        <p class="app-card-platform">Windows &middot; Speech-to-Text</p>
-                    </article>
-
-                    <article class="app-card">
-                        <div class="app-card-icon" aria-hidden="true">⚽</div>
-                        <h3><a href="apps/football-director.html">Football Director</a></h3>
-                        <p>
-                            Football management across five nations and 25 leagues.
-                            Full match engine, transfers, youth development, and online play.
-                        </p>
-                        <p class="app-card-platform">Windows &middot; Management Game</p>
-                    </article>
-
-                </div>
-            </section>
-
-            <section id="misc" aria-labelledby="misc-heading" class="card">
-                <div class="section-header">
-                    <h2 id="misc-heading">Miscellaneous</h2>
-                    <p>Experiments, ideas, and one-off tools that didn't fit anywhere else.</p>
-                </div>
-                <div class="misc-grid">
-                    <div class="misc-card">
-                        <div class="misc-card-icon" aria-hidden="true">🧪</div>
-                        <h3>Experiments</h3>
-                        <p>Prototypes and proof-of-concepts. Not always polished — but always interesting.</p>
-                    </div>
-                    <div class="misc-card">
-                        <div class="misc-card-icon" aria-hidden="true">💡</div>
-                        <h3>Ideas</h3>
-                        <p>Notes on things I want to build. Some will become apps. Most will live here forever.</p>
-                    </div>
-                    <div class="misc-card">
-                        <div class="misc-card-icon" aria-hidden="true">🔧</div>
-                        <h3>Scripts &amp; Tools</h3>
-                        <p>Small utilities that solve exactly one problem — usually mine.</p>
-                    </div>
-                </div>
-            </section>
+            <div class="category-grid">
+                <a href="apps.html" class="category-card">
+                    <span class="category-card-icon" aria-hidden="true">📱</span>
+                    <h2>Apps</h2>
+                    <p>iOS and Windows software. A media player and a speech-to-text tool.</p>
+                    <span class="category-cta" aria-hidden="true">Browse Apps &rarr;</span>
+                </a>
+                <a href="games.html" class="category-card">
+                    <span class="category-card-icon" aria-hidden="true">🎮</span>
+                    <h2>Games</h2>
+                    <p>Football Director — management across five nations and 25 leagues.</p>
+                    <span class="category-cta" aria-hidden="true">See Games &rarr;</span>
+                </a>
+            </div>
 
         </div>
     </main>

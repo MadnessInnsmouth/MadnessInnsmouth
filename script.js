@@ -1,6 +1,6 @@
 /**
- * MadnessInnsmouth Portfolio — JavaScript
- * Accessibility-focused navigation and enhancements.
+ * MadnessInnsmouth — JavaScript
+ * Navigation and general enhancements.
  */
 
 (function () {
@@ -122,32 +122,7 @@
         }, 250));
     }
 
-    // ===== Apps Submenu Accordion =====
-
-    function initAppsSubmenu() {
-        const appsToggle = document.getElementById('apps-toggle');
-        const appsPanel = document.getElementById('apps-submenu');
-
-        if (!appsToggle || !appsPanel) return;
-
-        appsToggle.addEventListener('click', function () {
-            const isExpanded = appsToggle.getAttribute('aria-expanded') === 'true';
-            const newState = !isExpanded;
-
-            appsToggle.setAttribute('aria-expanded', newState.toString());
-            appsPanel.classList.toggle('active', newState);
-
-            // Move focus to the first app link when opening
-            if (newState) {
-                const firstLink = appsPanel.querySelector('a[href]');
-                if (firstLink) {
-                    setTimeout(() => safeFocus(firstLink), 50);
-                }
-            }
-        });
-    }
-
-    // ===== General Accessibility Enhancements =====
+    // ===== General Enhancements =====
 
     function initGeneralEnhancements() {
         // Update copyright year automatically
@@ -188,7 +163,6 @@
 
     function init() {
         initNavigation();
-        initAppsSubmenu();
         initGeneralEnhancements();
     }
 
