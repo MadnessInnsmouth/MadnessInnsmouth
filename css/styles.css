@@ -6,17 +6,17 @@
 /* ── CSS Custom Properties ── */
 :root {
   --color-bg:           #0d0d0f;
-  --color-surface:      #16161a;
-  --color-surface-2:    #1e1e24;
-  --color-border:       #2a2a33;
+  --color-surface:      #15151b;
+  --color-surface-2:    #202029;
+  --color-border:       #3a3a46;
   --color-accent:       #e05c2a;
   --color-accent-hover: #f07040;
   --color-text:         #e8e8ee;
-  --color-text-muted:   #9090a0;
-  --color-text-subtle:  #5a5a6a;
+  --color-text-muted:   #b9b9c5;
+  --color-text-subtle:  #9b9baa;
   --color-link:         #e05c2a;
   --color-link-hover:   #f07040;
-  --color-focus:        #f07040;
+  --color-focus:        #ff8c5f;
 
   --font-sans:   'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono:   'Cascadia Code', 'Fira Code', 'Consolas', monospace;
@@ -80,7 +80,7 @@ body {
 
 /* ── Focus Visible ── */
 :focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 :focus:not(:focus-visible) {
@@ -95,6 +95,10 @@ a {
   transition: color var(--transition);
 }
 a:hover {
+  color: var(--color-link-hover);
+}
+
+a:focus-visible {
   color: var(--color-link-hover);
 }
 
@@ -481,7 +485,7 @@ main {
 
 .card-platform {
   font-size: 0.75rem;
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -752,6 +756,10 @@ main {
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--color-border);
 }
+
+.prose {
+  max-width: 72ch;
+}
 .prose h2:first-child {
   margin-top: 0;
 }
@@ -917,6 +925,18 @@ main {
   .project-body { gap: 2rem; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Nav Card Icon ── */
 .nav-card-icon {
   font-size: 1.5rem;
@@ -1063,4 +1083,3 @@ main {
   margin-bottom: 0.75rem;
   text-transform: uppercase;
 }
-
