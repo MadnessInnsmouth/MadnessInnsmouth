@@ -521,59 +521,26 @@ header[role="banner"] .container {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 1.75rem;
-    text-decoration: none;
-    color: #1a1a1a;
     display: flex;
     flex-direction: column;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.app-card:hover,
-.app-card:focus {
+@media (prefers-reduced-motion: no-preference) {
+    .app-card {
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+}
+
+.app-card:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
-    text-decoration: none;
-    color: #1a1a1a;
-    outline: 2px solid #0066cc;
-    outline-offset: 2px;
-}
-
-.app-card:visited {
-    color: #1a1a1a;
-}
-
-.app-card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 1rem;
 }
 
 .app-card-icon {
     font-size: 2rem;
     line-height: 1;
-}
-
-.app-badge {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
-
-.badge-ios {
-    background-color: #e8f0fe;
-    color: #1a56db;
-    border: 1px solid #c3d3fd;
-}
-
-.badge-soon {
-    background-color: #f3f4f6;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
+    margin-bottom: 1rem;
 }
 
 .app-card h3 {
@@ -581,30 +548,32 @@ header[role="banner"] .container {
     margin-bottom: 0.5rem;
 }
 
+.app-card h3 a {
+    color: #1a1a1a;
+    text-decoration: none;
+}
+
+.app-card h3 a:hover,
+.app-card h3 a:focus {
+    color: #0066cc;
+    text-decoration: underline;
+    background-color: transparent;
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
 .app-card p {
     font-size: 0.9rem;
     color: #555555;
     flex: 1;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.75rem;
     line-height: 1.65;
 }
 
-.app-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 1rem;
-    border-top: 1px solid #e0e0e0;
+.app-card-platform {
     font-size: 0.8rem;
-}
-
-.app-card-meta {
     color: #888888;
-}
-
-.app-card-cta {
-    color: #0066cc;
-    font-weight: 600;
+    margin-bottom: 0;
 }
 
 /* ===== Miscellaneous Section ===== */
@@ -638,17 +607,6 @@ header[role="banner"] .container {
     margin-bottom: 0.875rem;
 }
 
-.misc-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background-color: #e0e0e0;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #666666;
-}
 
 /* ===== CTA Section ===== */
 .cta-section {
@@ -672,33 +630,10 @@ header[role="banner"] .container {
     display: block;
 }
 
-.badges-row {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
+.page-hero-meta {
+    font-size: 0.9rem;
+    color: #888888;
     margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.badge {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 10px;
-    border-radius: 4px;
-}
-
-.badge-platform {
-    background-color: #e8f0fe;
-    color: #1a56db;
-    border: 1px solid #c3d3fd;
-}
-
-.badge-free {
-    background-color: #d1fae5;
-    color: #065f46;
-    border: 1px solid #6ee7b7;
 }
 
 .page-hero p {
@@ -817,6 +752,68 @@ header[role="banner"] .container {
     border-radius: 4px;
     padding: 1px 5px;
     color: #1a1a1a;
+}
+
+/* ===== Tables ===== */
+.table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+}
+
+caption {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #555555;
+    text-align: left;
+    padding: 0 0 0.5rem 0;
+    caption-side: top;
+}
+
+thead {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+thead th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 1px solid #333333;
+}
+
+tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tbody td,
+tbody th[scope="row"] {
+    padding: 0.75rem 1rem;
+    vertical-align: top;
+    border: 1px solid #e0e0e0;
+}
+
+tbody th[scope="row"] {
+    font-weight: 600;
+    background-color: #f0f0f0;
+    white-space: nowrap;
 }
 
 /* ===== Coming Soon Page ===== */
