@@ -3,755 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MadnessInnsmouth — Personal Portfolio</title>
-    <meta name="description" content="Personal portfolio of MadnessInnsmouth — iOS apps, tools, and whatever else comes to mind.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        /* ── Variables ─────────────────────────────────────────── */
-        :root {
-            --bg:          #060608;
-            --surface:     #0d0d10;
-            --surface-2:   #16161a;
-            --border:      rgba(255,255,255,0.07);
-            --border-hi:   rgba(255,255,255,0.14);
-            --accent:      #0A84FF;
-            --accent-glow: rgba(10,132,255,0.18);
-            --accent-ring: rgba(10,132,255,0.35);
-            --text:        #f0f0f5;
-            --text-2:      #8a8a92;
-            --text-3:      #505058;
-            --drawer-w:    300px;
-            --nav-h:       58px;
-        }
-
-        /* ── Reset ─────────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ── Skip link ─────────────────────────────────────────── */
-        .skip-link {
-            position: absolute; top: -200%; left: 1rem; z-index: 9999;
-            padding: 0.55rem 1.1rem;
-            background: var(--accent); color: #fff;
-            font-size: 0.85rem; font-weight: 600;
-            text-decoration: none; border-radius: 0 0 8px 8px;
-        }
-        .skip-link:focus { top: 0; outline: 3px solid #fff; outline-offset: 2px; }
-
-        /* ── Navbar ────────────────────────────────────────────── */
-        .navbar {
-            position: fixed; inset: 0 0 auto 0;
-            height: var(--nav-h);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 1.25rem;
-            background: rgba(6,6,8,0.82);
-            backdrop-filter: blur(18px) saturate(2);
-            -webkit-backdrop-filter: blur(18px) saturate(2);
-            border-bottom: 1px solid var(--border);
-            z-index: 200;
-        }
-        .nav-logo {
-            font-size: 1rem; font-weight: 800; letter-spacing: -0.4px;
-            color: var(--text); text-decoration: none;
-        }
-        .nav-logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
-
-        /* ── Hamburger button ──────────────────────────────────── */
-        .menu-btn {
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 4.5px;
-            width: 42px; height: 42px;
-            background: none; border: none; cursor: pointer;
-            color: var(--text); border-radius: 8px;
-            transition: background 0.15s;
-        }
-        .menu-btn:hover { background: rgba(255,255,255,0.06); }
-        .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-        .bar {
-            display: block; width: 20px; height: 1.75px;
-            background: currentColor; border-radius: 2px;
-            transform-origin: center;
-            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
-                        opacity   0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-        /* X state driven purely by aria-expanded */
-        .menu-btn[aria-expanded="true"] .bar:nth-child(1) { transform: translateY(6.25px) rotate(45deg); }
-        .menu-btn[aria-expanded="true"] .bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
-        .menu-btn[aria-expanded="true"] .bar:nth-child(3) { transform: translateY(-6.25px) rotate(-45deg); }
-
-        /* ── Overlay ───────────────────────────────────────────── */
-        .overlay {
-            position: fixed; inset: 0; z-index: 300;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.28s, visibility 0.28s;
-        }
-        .overlay.is-open { opacity: 1; visibility: visible; }
-
-        /* ── Drawer ────────────────────────────────────────────── */
-        .drawer {
-            position: fixed; top: 0; right: 0; bottom: 0;
-            width: var(--drawer-w);
-            background: #0e0e12;
-            border-left: 1px solid var(--border);
-            z-index: 400;
-            display: flex; flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-            overflow-y: auto; overscroll-behavior: contain;
-        }
-        .drawer.is-open { transform: translateX(0); }
-
-        .drawer-header {
-            display: flex; align-items: center; justify-content: space-between;
-            height: var(--nav-h); padding: 0 1.1rem;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-        .drawer-label {
-            font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.2px;
-            color: var(--text-3);
-        }
-        .drawer-close {
-            display: flex; align-items: center; justify-content: center;
-            width: 28px; height: 28px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 50%; cursor: pointer;
-            color: var(--text-2); font-size: 0.9rem; line-height: 1;
-            transition: background 0.15s, color 0.15s;
-        }
-        .drawer-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
-        .drawer-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-        /* Accordion row */
-        .drawer-section { border-bottom: 1px solid var(--border); }
-        .accordion-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; padding: 0.875rem 1.1rem;
-            background: none; border: none;
-            color: var(--text); font-family: inherit;
-            font-size: 0.9rem; font-weight: 600;
-            cursor: pointer; text-align: left;
-            transition: background 0.12s;
-        }
-        .accordion-btn:hover { background: rgba(255,255,255,0.03); }
-        .accordion-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-        .chevron {
-            width: 15px; height: 15px; color: var(--text-3);
-            transition: transform 0.22s ease; flex-shrink: 0;
-        }
-        .accordion-btn[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-
-        /* Accordion panel */
-        .accordion-panel {
-            overflow: hidden; max-height: 0;
-            transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-        .accordion-panel.is-open { max-height: 320px; }
-
-        /* App row inside drawer */
-        .drawer-app-link {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.65rem 1.1rem 0.65rem 1.5rem;
-            text-decoration: none; color: var(--text);
-            transition: background 0.12s;
-        }
-        .drawer-app-link:hover { background: rgba(255,255,255,0.03); }
-        .drawer-app-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-        .drawer-app-icon {
-            width: 38px; height: 38px; flex-shrink: 0;
-            border-radius: 10px; background: var(--surface-2);
-            border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
-        }
-        .drawer-app-name { font-size: 0.83rem; font-weight: 600; }
-        .drawer-app-meta { font-size: 0.69rem; color: var(--text-2); margin-top: 1px; }
-
-        /* Plain drawer link */
-        .drawer-link {
-            display: block; padding: 0.875rem 1.1rem;
-            color: var(--text); font-size: 0.9rem; font-weight: 600;
-            text-decoration: none; border-bottom: 1px solid var(--border);
-            transition: background 0.12s, color 0.12s;
-        }
-        .drawer-link:hover { background: rgba(255,255,255,0.03); color: var(--accent); }
-        .drawer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-
-        /* ── Main / scroll offset ──────────────────────────────── */
-        main { padding-top: var(--nav-h); }
-
-        /* All sections that are anchor targets need scroll-margin-top */
-        [id] { scroll-margin-top: calc(var(--nav-h) + 16px); }
-
-        /* ── Hero ──────────────────────────────────────────────── */
-        .hero {
-            position: relative;
-            max-width: 820px; margin: 0 auto;
-            padding: 7rem 2rem 5.5rem;
-            text-align: center;
-            overflow: hidden;
-        }
-        /* Subtle radial glow */
-        .hero::before {
-            content: '';
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 600px; height: 400px;
-            background: radial-gradient(ellipse at 50% 0%, rgba(10,132,255,0.1) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        .hero-eyebrow {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 0.25rem 0.8rem;
-            background: var(--accent-glow);
-            border: 1px solid var(--accent-ring);
-            border-radius: 100px;
-            font-size: 0.7rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.7px;
-            color: var(--accent); margin-bottom: 1.75rem;
-        }
-        .eyebrow-dot {
-            width: 5px; height: 5px; border-radius: 50%;
-            background: var(--accent);
-        }
-        .hero h1 {
-            font-size: clamp(2.8rem, 7vw, 5rem);
-            font-weight: 900; letter-spacing: -3px; line-height: 1.02;
-            margin-bottom: 1.5rem;
-        }
-        .hero h1 em {
-            font-style: normal;
-            background: linear-gradient(135deg, #5ab3ff 0%, var(--accent) 50%, #006fd6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hero-body {
-            font-size: 1.05rem; line-height: 1.8;
-            color: var(--text-2);
-            max-width: 560px; margin: 0 auto 2.5rem;
-        }
-        .cta-row {
-            display: flex; gap: 0.75rem;
-            justify-content: center; flex-wrap: wrap;
-        }
-
-        /* ── Buttons ───────────────────────────────────────────── */
-        .btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 0.65rem 1.5rem;
-            border-radius: 100px; border: none; cursor: pointer;
-            font-family: inherit; font-size: 0.875rem; font-weight: 600;
-            text-decoration: none; white-space: nowrap;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-        }
-        .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-        .btn:active { transform: scale(0.97); }
-
-        .btn-solid {
-            background: var(--accent); color: #fff;
-            box-shadow: 0 0 0 0 rgba(10,132,255,0);
-        }
-        .btn-solid:hover {
-            background: #2291ff;
-            box-shadow: 0 4px 20px rgba(10,132,255,0.35);
-            transform: translateY(-1px);
-        }
-        .btn-outline {
-            background: transparent; color: var(--text);
-            border: 1px solid var(--border-hi);
-        }
-        .btn-outline:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.22);
-            transform: translateY(-1px);
-        }
-
-        /* ── Divider ───────────────────────────────────────────── */
-        .rule {
-            border: none; border-top: 1px solid var(--border);
-            max-width: 1060px; margin: 0 auto;
-        }
-
-        /* ── Section wrapper ───────────────────────────────────── */
-        .section {
-            max-width: 1060px; margin: 0 auto;
-            padding: 4.5rem 2rem;
-        }
-        .section-kicker {
-            font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.6px;
-            color: var(--accent); margin-bottom: 0.5rem;
-        }
-        .section-heading {
-            font-size: clamp(1.7rem, 3vw, 2.4rem);
-            font-weight: 800; letter-spacing: -0.8px; line-height: 1.1;
-            margin-bottom: 0.65rem;
-        }
-        .section-sub {
-            font-size: 0.9rem; color: var(--text-2);
-            max-width: 440px; margin-bottom: 2.25rem;
-        }
-
-        /* ── App cards ─────────────────────────────────────────── */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-        .card {
-            display: flex; flex-direction: column;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 18px; padding: 1.5rem;
-            text-decoration: none; color: var(--text);
-            position: relative; overflow: hidden;
-            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-        }
-        /* Top-edge shine on hover */
-        .card::before {
-            content: ''; position: absolute;
-            inset: 0 0 auto 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(10,132,255,0.5), transparent);
-            opacity: 0; transition: opacity 0.25s;
-        }
-        .card:hover {
-            border-color: var(--border-hi);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 36px rgba(0,0,0,0.5);
-        }
-        .card:hover::before { opacity: 1; }
-        .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-        .card-top {
-            display: flex; align-items: flex-start;
-            justify-content: space-between; margin-bottom: 1.1rem;
-        }
-        .card-icon {
-            width: 50px; height: 50px; border-radius: 13px;
-            background: var(--surface-2); border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
-        }
-        .card-badge {
-            font-size: 0.62rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.3px;
-            padding: 3px 7px; border-radius: 5px; border: 1px solid;
-        }
-        .badge-ios {
-            color: var(--accent); background: var(--accent-glow);
-            border-color: var(--accent-ring);
-        }
-        .badge-soon {
-            color: var(--text-2); background: rgba(255,255,255,0.04);
-            border-color: var(--border);
-        }
-        .card-title {
-            font-size: 1.05rem; font-weight: 700;
-            letter-spacing: -0.2px; margin-bottom: 0.5rem;
-        }
-        .card-desc {
-            font-size: 0.84rem; color: var(--text-2);
-            line-height: 1.65; flex: 1; margin-bottom: 1.25rem;
-        }
-        .card-foot {
-            display: flex; align-items: center; justify-content: space-between;
-            padding-top: 1rem; border-top: 1px solid var(--border);
-            font-size: 0.75rem;
-        }
-        .card-meta { color: var(--text-3); }
-        .card-cta {
-            display: flex; align-items: center; gap: 3px;
-            color: var(--accent); font-weight: 600;
-        }
-
-        /* ── Misc cards ────────────────────────────────────────── */
-        .misc-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1rem;
-        }
-        .misc-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px; padding: 1.35rem;
-            transition: border-color 0.2s;
-        }
-        .misc-card:hover { border-color: var(--border-hi); }
-        .misc-card-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
-        .misc-card-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
-        .misc-card-body { font-size: 0.8rem; color: var(--text-2); line-height: 1.6; }
-        .misc-tag {
-            display: inline-block; margin-top: 0.8rem;
-            padding: 2px 7px; border-radius: 4px;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-            font-size: 0.63rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3);
-        }
-
-        /* ── Footer ────────────────────────────────────────────── */
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 2.25rem 2rem; text-align: center;
-        }
-        .footer-links {
-            list-style: none; display: flex;
-            justify-content: center; flex-wrap: wrap;
-            gap: 0.2rem 1.1rem; margin-bottom: 1rem;
-        }
-        .footer-links a {
-            color: var(--text-2); font-size: 0.8rem;
-            text-decoration: none; transition: color 0.15s;
-        }
-        .footer-links a:hover { color: var(--text); }
-        .footer-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
-        .footer-copy { font-size: 0.75rem; color: var(--text-3); }
-
-        /* ── Responsive ────────────────────────────────────────── */
-        @media (max-width: 600px) {
-            .hero  { padding: 5rem 1.25rem 3.5rem; }
-            .section { padding: 3rem 1.25rem; }
-            .cards, .misc-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 360px) { :root { --drawer-w: 100vw; } }
-
-        /* ── Reduced motion ────────────────────────────────────── */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                transition-duration: 0.01ms !important;
-                animation-duration:  0.01ms !important;
-            }
-            html { scroll-behavior: auto; }
-        }
-    </style>
+    <title>MadnessInnsmouth - Personal Portfolio</title>
+    <meta name="description" content="Personal portfolio of MadnessInnsmouth — iOS apps, salineous tools, and whatever else comes to mind.">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <a class="skip-link" href="#main">Skip to main content</a>
-
-    <!-- Backdrop (click to close drawer) -->
-    <div class="overlay" id="overlay" aria-hidden="true"></div>
-
-    <!-- ═══ NAVBAR ══════════════════════════════════════════════ -->
-    <header>
-        <nav class="navbar" aria-label="Main navigation">
-            <a class="nav-logo" href="/" aria-label="MadnessInnsmouth — home">MadnessInnsmouth</a>
-            <!--
-                aria-label stays "Menu" always.
-                aria-expanded tells assistive tech whether it's open or closed.
-                Screen readers announce: "Menu, collapsed, button" / "Menu, expanded, button"
-                Never mutate aria-label or onclick — a single toggleDrawer() handles both states.
-            -->
-            <button
-                class="menu-btn"
-                id="menuBtn"
-                aria-label="Menu"
-                aria-expanded="false"
-                aria-controls="navDrawer"
-                onclick="toggleDrawer()"
-            >
-                <span class="bar" aria-hidden="true"></span>
-                <span class="bar" aria-hidden="true"></span>
-                <span class="bar" aria-hidden="true"></span>
+    <header role="banner">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html" aria-label="MadnessInnsmouth - Return to homepage">MadnessInnsmouth</a>
+            </div>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation menu" aria-controls="main-navigation" aria-expanded="false">
+                <span class="sr-only">Toggle</span>
+                <span class="hamburger-icon" aria-hidden="true"></span>
             </button>
-        </nav>
+            <nav id="main-navigation" aria-label="Main site navigation">
+                <ul class="nav-menu">
+                    <li>
+                        <button
+                            class="nav-submenu-toggle"
+                            id="apps-toggle"
+                            aria-expanded="false"
+                            aria-controls="apps-submenu"
+                        >
+                            Apps
+                            <span class="nav-chevron" aria-hidden="true"></span>
+                        </button>
+                        <ul class="nav-submenu" id="apps-submenu" role="list" aria-label="Apps">
+                            <li role="listitem">
+                                <a href="apps/accessible-media-player.html" class="submenu-app-link">
+                                    <span class="submenu-app-icon" aria-hidden="true">🎵</span>
+                                    <span class="submenu-app-content">
+                                        <span class="submenu-app-name">Accessible Media Player</span>
+                                        <span class="submenu-app-desc">iOS &middot; Audio &amp; Documents</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li role="listitem">
+                                <a href="apps/coming-soon.html" class="submenu-app-link">
+                                    <span class="submenu-app-icon" aria-hidden="true">⚡</span>
+                                    <span class="submenu-app-content">
+                                        <span class="submenu-app-name">Next App</span>
+                                        <span class="submenu-app-desc">Coming Soon</span>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><a href="#misc">Miscellaneous</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <!-- ═══ NAVIGATION DRAWER ═══════════════════════════════════ -->
-    <div
-        class="drawer"
-        id="navDrawer"
-        role="dialog"
-        aria-label="Navigation"
-        aria-modal="true"
-    >
-        <div class="drawer-header">
-            <span class="drawer-label">Menu</span>
-            <button
-                class="drawer-close"
-                id="drawerClose"
-                aria-label="Close menu"
-                onclick="toggleDrawer()"
-            >&#x2715;</button>
+    <main id="main-content" tabindex="-1">
+        <div class="container">
+
+            <header class="hero-section">
+                <h1>MadnessInnsmouth</h1>
+                <p class="hero-title">Personal Portfolio</p>
+                <p class="hero-description">
+                    I build iOS apps, salineous tools, and whatever else my brain decides is worth making.
+                    This is my personal corner of the web — from polished projects to experiments that exist
+                    purely because they seemed like a good idea at the time. Use the menu above to explore.
+                </p>
+                <div class="hero-actions">
+                    <a href="#apps" class="btn btn-primary">Browse Apps</a>
+                    <a href="#misc" class="btn btn-secondary">Miscellaneous</a>
+                </div>
+            </header>
+
+            <section id="apps" aria-labelledby="apps-heading">
+                <div class="section-header">
+                    <h2 id="apps-heading">Apps</h2>
+                    <p>iOS apps built around real accessibility requirements.</p>
+                </div>
+                <div class="apps-grid">
+
+                    <a
+                        href="apps/accessible-media-player.html"
+                        class="app-card"
+                        aria-label="Accessible Media Player — iOS audio and document app. View details."
+                    >
+                        <div class="app-card-header">
+                            <span class="app-card-icon" aria-hidden="true">🎵</span>
+                            <span class="app-badge badge-ios">iOS</span>
+                        </div>
+                        <h3>Accessible Media Player</h3>
+                        <p>
+                            A fully VoiceOver-native media engine. Parametric <abbr title="Equaliser">EQ</abbr>,
+                            pitch shifting, variable speed playback, and document rendering — built from the ground up
+                            with accessibility as the foundation.
+                        </p>
+                        <div class="app-card-footer">
+                            <span class="app-card-meta">Audio &middot; Documents</span>
+                            <span class="app-card-cta" aria-hidden="true">View &rarr;</span>
+                        </div>
+                    </a>
+
+                    <a
+                        href="apps/coming-soon.html"
+                        class="app-card"
+                        aria-label="Next App — Coming soon. View details."
+                    >
+                        <div class="app-card-header">
+                            <span class="app-card-icon" aria-hidden="true">⚡</span>
+                            <span class="app-badge badge-soon">Soon</span>
+                        </div>
+                        <h3>Next App</h3>
+                        <p>
+                            Something new is in the works. Brewing quietly until it's ready —
+                            another tool built to solve a real problem, or just because it seemed
+                            worth making.
+                        </p>
+                        <div class="app-card-footer">
+                            <span class="app-card-meta">Coming Soon</span>
+                            <span class="app-card-cta" aria-hidden="true">View &rarr;</span>
+                        </div>
+                    </a>
+
+                </div>
+            </section>
+
+            <section id="misc" aria-labelledby="misc-heading" class="card">
+                <div class="section-header">
+                    <h2 id="misc-heading">Miscellaneous</h2>
+                    <p>Experiments, ideas, and one-off tools that didn't fit anywhere else.</p>
+                </div>
+                <div class="misc-grid">
+                    <div class="misc-card">
+                        <div class="misc-card-icon" aria-hidden="true">🧪</div>
+                        <h3>Experiments</h3>
+                        <p>Prototypes and proof-of-concepts. Not always polished — but always interesting.</p>
+                        <span class="misc-tag">In Progress</span>
+                    </div>
+                    <div class="misc-card">
+                        <div class="misc-card-icon" aria-hidden="true">💡</div>
+                        <h3>Ideas</h3>
+                        <p>Notes on things I want to build. Some will become apps. Most will live here forever.</p>
+                        <span class="misc-tag">Notes</span>
+                    </div>
+                    <div class="misc-card">
+                        <div class="misc-card-icon" aria-hidden="true">🔧</div>
+                        <h3>Scripts &amp; Tools</h3>
+                        <p>Small utilities that solve exactly one problem — usually mine.</p>
+                        <span class="misc-tag">Utilities</span>
+                    </div>
+                </div>
+            </section>
+
         </div>
-
-        <nav aria-label="Site sections">
-
-            <!-- Apps — accordion ─────────────────────────────── -->
-            <div class="drawer-section">
-                <button
-                    class="accordion-btn"
-                    id="appsBtn"
-                    aria-expanded="false"
-                    aria-controls="appsPanel"
-                    onclick="toggleApps()"
-                >
-                    Apps
-                    <svg class="chevron" aria-hidden="true" viewBox="0 0 15 15" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 5 7.5 10 12 5"/>
-                    </svg>
-                </button>
-                <div class="accordion-panel" id="appsPanel" role="region" aria-labelledby="appsBtn">
-                    <a class="drawer-app-link" href="apps/accessible-media-player.html">
-                        <div class="drawer-app-icon" aria-hidden="true">🎵</div>
-                        <div>
-                            <div class="drawer-app-name">Accessible Media Player</div>
-                            <div class="drawer-app-meta">iOS · Audio &amp; Documents</div>
-                        </div>
-                    </a>
-                    <a class="drawer-app-link" href="apps/coming-soon.html">
-                        <div class="drawer-app-icon" aria-hidden="true">⚡</div>
-                        <div>
-                            <div class="drawer-app-name">Next App</div>
-                            <div class="drawer-app-meta">Coming Soon</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Miscellaneous ────────────────────────────────── -->
-            <a class="drawer-link" href="#misc" onclick="toggleDrawer()">Miscellaneous</a>
-
-        </nav>
-    </div>
-
-    <!-- ═══ MAIN CONTENT ════════════════════════════════════════ -->
-    <main id="main">
-
-        <!-- Hero ─────────────────────────────────────────────── -->
-        <section class="hero" aria-labelledby="hero-h">
-            <div class="hero-eyebrow" aria-label="Personal portfolio">
-                <span class="eyebrow-dot" aria-hidden="true"></span>
-                Personal Portfolio
-            </div>
-            <h1 id="hero-h">Ideas made<br><em>into things.</em></h1>
-            <p class="hero-body">
-                I'm MadnessInnsmouth. I build iOS apps, salineous tools,
-                and whatever else my brain decides is worth making — from
-                polished projects to experiments that exist purely because
-                they seemed like a good idea at the time.
-            </p>
-            <div class="cta-row">
-                <a class="btn btn-solid" href="#apps">Browse Apps</a>
-                <a class="btn btn-outline" href="#misc">Miscellaneous</a>
-            </div>
-        </section>
-
-        <hr class="rule" aria-hidden="true">
-
-        <!-- Apps ─────────────────────────────────────────────── -->
-        <section class="section" id="apps" aria-labelledby="apps-h">
-            <p class="section-kicker" aria-hidden="true">Apps</p>
-            <h2 class="section-heading" id="apps-h">Things I've shipped</h2>
-            <p class="section-sub">iOS apps built around real accessibility requirements.</p>
-
-            <div class="cards">
-
-                <a
-                    class="card"
-                    href="apps/accessible-media-player.html"
-                    aria-label="Accessible Media Player — iOS audio and document app. View details."
-                >
-                    <div class="card-top">
-                        <div class="card-icon" aria-hidden="true">🎵</div>
-                        <span class="card-badge badge-ios">iOS</span>
-                    </div>
-                    <h3 class="card-title">Accessible Media Player</h3>
-                    <p class="card-desc">
-                        A fully VoiceOver-native media engine. Parametric EQ, pitch shifting,
-                        variable speed, and document rendering — accessibility as the foundation,
-                        not a feature.
-                    </p>
-                    <div class="card-foot">
-                        <span class="card-meta">Audio · Documents</span>
-                        <span class="card-cta" aria-hidden="true">
-                            View
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="2" y1="6" x2="10" y2="6"/>
-                                <polyline points="7 3 10 6 7 9"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-
-                <a
-                    class="card"
-                    href="apps/coming-soon.html"
-                    aria-label="Next App — Coming soon. View details."
-                >
-                    <div class="card-top">
-                        <div class="card-icon" aria-hidden="true">⚡</div>
-                        <span class="card-badge badge-soon">Soon</span>
-                    </div>
-                    <h3 class="card-title">Next App</h3>
-                    <p class="card-desc">
-                        Something new is in the works. Brewing quietly — another tool
-                        built to solve a real problem, or just because it seemed
-                        worth making.
-                    </p>
-                    <div class="card-foot">
-                        <span class="card-meta">Coming Soon</span>
-                        <span class="card-cta" aria-hidden="true">
-                            View
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="2" y1="6" x2="10" y2="6"/>
-                                <polyline points="7 3 10 6 7 9"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-
-            </div>
-        </section>
-
-        <hr class="rule" aria-hidden="true">
-
-        <!-- Miscellaneous ────────────────────────────────────── -->
-        <section class="section" id="misc" aria-labelledby="misc-h">
-            <p class="section-kicker" aria-hidden="true">Miscellaneous</p>
-            <h2 class="section-heading" id="misc-h">Random brain output</h2>
-            <p class="section-sub">Experiments, ideas, and one-off tools that didn't fit anywhere else.</p>
-
-            <div class="misc-grid">
-                <div class="misc-card">
-                    <div class="misc-card-icon" aria-hidden="true">🧪</div>
-                    <h3 class="misc-card-title">Experiments</h3>
-                    <p class="misc-card-body">Prototypes and proof-of-concepts. Not always polished — but always interesting.</p>
-                    <span class="misc-tag">In Progress</span>
-                </div>
-                <div class="misc-card">
-                    <div class="misc-card-icon" aria-hidden="true">💡</div>
-                    <h3 class="misc-card-title">Ideas</h3>
-                    <p class="misc-card-body">Notes on things I want to build. Some will become apps. Most will live here forever.</p>
-                    <span class="misc-tag">Notes</span>
-                </div>
-                <div class="misc-card">
-                    <div class="misc-card-icon" aria-hidden="true">🔧</div>
-                    <h3 class="misc-card-title">Scripts &amp; Tools</h3>
-                    <p class="misc-card-body">Small utilities that solve exactly one problem — usually mine.</p>
-                    <span class="misc-tag">Utilities</span>
-                </div>
-            </div>
-        </section>
-
     </main>
 
-    <!-- ═══ FOOTER ══════════════════════════════════════════════ -->
     <footer role="contentinfo">
-        <nav aria-label="Legal and policy links">
-            <ul class="footer-links">
-                <li><a href="accessibility.html">Accessibility Statement</a></li>
-                <li><a href="privacy.html">Privacy Policy</a></li>
-                <li><a href="terms.html">Terms of Service</a></li>
-            </ul>
-        </nav>
-        <p class="footer-copy">&copy; 2026 MadnessInnsmouth. All rights reserved.</p>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; <span id="current-year">2026</span> MadnessInnsmouth. All rights reserved.</p>
+                <p>Building things that work for everyone.</p>
+                <nav aria-label="Footer navigation">
+                    <p>
+                        <a href="accessibility.html" class="footer-link-button">Accessibility Statement</a> |
+                        <a href="privacy.html" class="footer-link-button">Privacy Policy</a> |
+                        <a href="terms.html" class="footer-link-button">Terms of Service</a>
+                    </p>
+                </nav>
+            </div>
+        </div>
     </footer>
 
-    <!-- ═══ SCRIPT ══════════════════════════════════════════════ -->
-    <script>
-    (function () {
-        'use strict';
-
-        var isOpen    = false;
-        var appsOpen  = false;
-        var triggerEl = null;
-
-        var FOCUSABLE = 'a[href], button:not([disabled])';
-
-        function toggleDrawer() {
-            if (isOpen) { _close(); } else { _open(); }
-        }
-
-        function _open() {
-            isOpen    = true;
-            triggerEl = document.getElementById('menuBtn');
-
-            var drawer  = document.getElementById('navDrawer');
-            var overlay = document.getElementById('overlay');
-            var btn     = document.getElementById('menuBtn');
-
-            drawer.classList.add('is-open');
-            overlay.classList.add('is-open');
-            overlay.removeAttribute('aria-hidden');
-            btn.setAttribute('aria-expanded', 'true');
-
-            document.body.style.overflow = 'hidden';
-            document.addEventListener('keydown', _onKey);
-            overlay.addEventListener('click', toggleDrawer, { once: true });
-
-            /* Move focus into drawer after CSS transition begins */
-            setTimeout(function () {
-                var el = document.getElementById('drawerClose');
-                if (el) el.focus();
-            }, 40);
-        }
-
-        function _close() {
-            if (!isOpen) return;
-            isOpen = false;
-
-            var drawer  = document.getElementById('navDrawer');
-            var overlay = document.getElementById('overlay');
-            var btn     = document.getElementById('menuBtn');
-
-            drawer.classList.remove('is-open');
-            overlay.classList.remove('is-open');
-            overlay.setAttribute('aria-hidden', 'true');
-            btn.setAttribute('aria-expanded', 'false');
-
-            document.body.style.overflow = '';
-            document.removeEventListener('keydown', _onKey);
-
-            if (triggerEl) { triggerEl.focus(); triggerEl = null; }
-        }
-
-        function toggleApps() {
-            appsOpen = !appsOpen;
-            var btn   = document.getElementById('appsBtn');
-            var panel = document.getElementById('appsPanel');
-            btn.setAttribute('aria-expanded', appsOpen ? 'true' : 'false');
-            panel.classList.toggle('is-open', appsOpen);
-        }
-
-        function _onKey(e) {
-            if (e.key === 'Escape') { toggleDrawer(); return; }
-
-            if (e.key === 'Tab') {
-                var drawer = document.getElementById('navDrawer');
-                var els    = Array.prototype.slice.call(drawer.querySelectorAll(FOCUSABLE));
-                if (!els.length) return;
-                var first = els[0], last = els[els.length - 1];
-                if (e.shiftKey && document.activeElement === first) {
-                    e.preventDefault(); last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                    e.preventDefault(); first.focus();
-                }
-            }
-        }
-
-        /* Expose to inline onclick handlers */
-        window.toggleDrawer = toggleDrawer;
-        window.toggleApps   = toggleApps;
-    }());
-    </script>
-
+    <script src="script.js"></script>
 </body>
 </html>
